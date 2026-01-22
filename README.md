@@ -15,10 +15,6 @@ Other files, like build scripts, installation scripts, build tool files e.g. mak
 in the root directory. Other directories, like `lib/` or `include/` for language specific applications
 can be added, but are not a part of the template.
 
-## Tasks and Management
-
-See [here](https://github.com/orgs/concordic/projects/1) for the project and task tracking page.
-
 ## Table of Contents
 
 Empty right now
