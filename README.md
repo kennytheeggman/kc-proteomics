@@ -1,4 +1,4 @@
-# Concord
+# KC-Proteomics
 
 This is an ideation and brainstorming repository for this project, as well as a repository
 serving as a template structure for other repositories.
