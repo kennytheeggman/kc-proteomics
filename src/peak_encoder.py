@@ -1,7 +1,9 @@
 import h5py
 import numpy as np
 
-filename = "datasets/IVE_v2/IVE_v2_train.h5"
+# need to do it on torch instead? and make into a function that does it all at once
+
+filename = "/home/kc/workspace/datasets/IVE_v2/IVE_v2_train.h5"
 
 with h5py.File(filename, "r") as f:
     print("Keys: %s" % f.keys())  # keys are ['charges', 'mapping', 'peptides', 'premzs', 'spectra']
