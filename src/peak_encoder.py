@@ -40,3 +40,6 @@ sine_terms = np.sin(raw_encode[0]*b*2*np.pi)
 cosine_terms = np.cos(raw_encode[0]*b*2*np.pi)
 fourier_encode[::2, :] = sine_terms
 fourier_encode[1::2, :] = cosine_terms
+
+# format data
+# concat the m/z and intensities, and then also do whatever with precursor

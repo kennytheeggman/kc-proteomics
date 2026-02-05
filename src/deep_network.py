@@ -1,14 +1,27 @@
 import torch
 from torch import nn
 
-# embedding FFNs
+# embedding FFNs, taken largely from dreams code
 class FeedForward(nn.Module):
 
-    def __init__(self, input_dim, output_dim): # WHAT r they doing im so confsed
-        return
+    # hidden_dims is [size of hidden layer 1, size of hidden layer 2, etc]
+    def __init__(self, input_dim, output_dim, hidden_dims, normalizer=nn.ReLU, bias=True, dropout=0):
+        super().__init__()
+        self.flatten = nn.Flatten()
+        self.linear_stack = nn.ModuleList([])
+        self.ff.append(nn.Linear(input_dim, hidden_dims[0], bias=bias))
+        self.ff.append(normalizer())
+        self.ff.append(nn.Dropout(p=dropout))
+        for i in range(len(hidden_dims)-1):
+            self.ff.append(nn.Linear(hidden_dims[i], hidden_dims[i+1], bias=bias))
+            self.ff.append(normalizer())
+            self.ff.append(nn.Dropout(p=dropout))
+        self.ff.append(nn.Linear(hidden_dims[-1], output_dim, bias=bias))
+        self.linear_stack = nn.Sequential(*self.linear_stack)
     
     def forward(self, x):
-        return 
+        x = nn.flatten(x)
+        return self.linear_stack(x)
 
 
 # spectra encoder
@@ -41,24 +54,6 @@ class SpectraDecoder(nn.Module):
 # and another file to run
 
 # kenny pseudocode below
-# Structure
-
-# ```mermaid
-# flowchart LR
-# A((Input))
-# B[Encoder]
-# C{Embedding}
-# D[Decoder]
-# E((Output))
-# F((AA))
-# A-->B
-# B-->C
-# C-->D
-# D-->E
-# C-->F
-# ```
-
-# # Specification
 
 # What each segment (module) takes on or outputs
 
