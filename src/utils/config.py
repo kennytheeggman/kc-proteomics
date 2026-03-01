@@ -8,6 +8,14 @@ class SpectrumConfig:
         self.m_max = 1e3
         self.num_features = 4096
 
+class LatentConfig:
+    def __init__(self):
+        self.d_model = 128
+        self.num_layers = 4
+        self.linear_num_layers = 4
+        self.encoder_num_layers = 4
+        self.decoder_num_layers = 4
+
 class HyperConfig:
     def __init__(self):
         self.batch_size = 32
@@ -27,7 +35,9 @@ class Config:
         self.device = accelerator.type if accelerator else "cpu"
 
         # Hyperparameters
+        self.num_peaks = 16
         self.spec = SpectrumConfig()
+        self.embed = LatentConfig()
         self.hyper = HyperConfig()
 
     def __str__(self):
