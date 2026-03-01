@@ -1,4 +1,8 @@
 import argparse
+
+import torch
+
+from .network.spectrum import SpecEmbed
 from .data.data import TrainingDataset
 from .utils.config import Config
 
@@ -18,6 +22,10 @@ def args():
 if __name__ == "__main__":
     config = args()
     dataset = TrainingDataset(config)
-    print(dataset[0])
-    print(config.device)
+    se = SpecEmbed(config)
+    print(se.b)
+    mz, i = torch.randn(10), torch.randn(10)
+    print(mz, i)
+    embed = se.forward(mz, i)
+    print(embed, embed.shape)
 
