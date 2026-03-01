@@ -2,6 +2,13 @@ from pathlib import Path
 import torch
 
 
+class DatasetConfig:
+    def __init__(self):
+        self.training = "../datasets/IVE_v2_train.h5"
+        self.eval = "../datasets/IVE_v2_val.h5"
+        self.masking_prob = 0.1
+        self.sigma = 0.01
+
 class SpectrumConfig:
     def __init__(self):
         self.m_min = 1e-4
@@ -33,10 +40,6 @@ class Config:
         # Constants
         self.AA_TYPES = 27
 
-        # Datasets
-        self.dataset_training = Path(dataset_training)
-        self.dataset_eval = Path(dataset_eval)
-
         # Torch Config
         self.cpu = "cpu"
         accelerator = torch.accelerator.current_accelerator()
@@ -44,6 +47,7 @@ class Config:
 
         # Hyperparameters
         self.num_peaks = 16
+        self.data = DatasetConfig()
         self.spec = SpectrumConfig()
         self.embed = LatentConfig()
         self.seq = SequenceConfig()
