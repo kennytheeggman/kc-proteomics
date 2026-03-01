@@ -30,10 +30,11 @@ def evaluate(config, dataloader, model, loss_fn):
     with torch.no_grad():
         for idx, batch in enumerate(dataloader):
             charge, premz, mz, i, peptide = batch
-            prob_matrix, encoded, decoded = model(mz[0].to(config.device), i[0].to(config.device))
-            loss = loss_fn(prob_matrix, encoded, decoded, peptide)
-            test_loss += loss.item()
-    test_loss /= len(dataloader)
+            for idx in range(config.hyper.batch_size):
+                prob_matrix, encoded, decoded = model(mz[0].to(config.device), i[0].to(config.device))
+                loss = loss_fn(prob_matrix, encoded, decoded, peptide)
+                test_loss += loss.item()
+    test_loss /= len(dataloader) * config.hyper.batch_size
     print(f"Test loss: {test_loss}")
 
 def run(config, model, loss_fn, optimizer, train_dataloader, eval_dataloader):
