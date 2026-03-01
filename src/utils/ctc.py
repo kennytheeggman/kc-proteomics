@@ -16,7 +16,7 @@ def reduce(sequence: torch.Tensor, blank=0):
             last = blank
             continue
         else:
-            reduced.append(i)
+            reduced.append(chr(i + ord('A') - 1))
             last = i
     return reduced
 
