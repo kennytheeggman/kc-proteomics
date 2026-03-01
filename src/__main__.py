@@ -1,9 +1,7 @@
 import argparse
 
-import torch
-
-from src.network.network import Model
-from src.utils.ctc import decode, reduce 
+from .network.network import Model
+from .utils.loss import get_loss 
 
 from .data.data import TrainingDataset
 from .utils.config import Config
@@ -18,7 +16,7 @@ def args():
     parser.add_argument('--train', default='../datasets/IVE_v2_train.h5')
     parser.add_argument('--eval', default='../datasets/IVE_v2_val.h5')
     args = parser.parse_args()
-    return Config(args.train, args.eval) 
+    return Config() 
 
 
 if __name__ == "__main__":
@@ -26,16 +24,10 @@ if __name__ == "__main__":
     dataset = TrainingDataset(config)
     model = Model(config)
     model.to(config.device)
+    loss_fn = get_loss(config)
     print(dataset[0])
     charge, premz, mz, i, peptide = dataset[0]
+    peptide = peptide.decode()
     prob_matrix, encoded, decoded = model(mz.to(config.device), i.to(config.device))
-    print(prob_matrix.to(config.cpu), prob_matrix.shape)
-    sequence = decode(prob_matrix, log=True)
-    processed = reduce(sequence)
-
-    ctc_loss = torch.nn.CTCLoss(blank=0, reduction='none')
-    loss = ctc_loss(prob_matrix.to(config.cpu), sequence.to(config.cpu), torch.tensor([prob_matrix.shape[0]]), torch.tensor([sequence.shape[0]]))
-    print("".join(processed))
-    print((decoded - encoded).to(config.cpu), decoded.shape)
+    loss = loss_fn(prob_matrix.to(config.cpu), encoded.to(config.cpu), decoded.to(config.cpu), peptide)
     print(loss)
-    loss.backward()

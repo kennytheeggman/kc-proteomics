@@ -27,7 +27,7 @@ class PeptideDataset(Dataset):
     def __len__(self):
         return len(self.charges)
 
-    def __getitem__(self, idx) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, str]:
+    def __getitem__(self, idx) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, bytes]:
         spectrum_size = len(self.spectra[idx])
         mz, i = (
             torch.from_numpy(np.array(self.spectra[idx])[:int(spectrum_size/2)]),

@@ -4,7 +4,7 @@
 from math import ceil
 from torch import nn
 import torch
-from src.utils.config import Config
+from ..utils.config import Config
 
 
 class EmbedSequence(nn.Module):
