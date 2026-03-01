@@ -8,13 +8,14 @@ def train(config, dataloader, model, loss_fn, optimizer):
     for idx, batch in enumerate(dataloader):
         optimizer.zero_grad()
         charge, premz, mz, i, peptide = batch
-        prob_matrix, encoded, decoded = model(mz[0].to(config.device), i[0].to(config.device))
-        print("".join(reduce(decode(prob_matrix, log=True).to(config.cpu))), peptide[0].decode())
-        loss = loss_fn(prob_matrix, encoded, decoded, peptide[0].decode())
-        torch.autograd.set_detect_anomaly(True)
-        loss.backward()
-        optimizer.step()
-        print(f"Loss: {loss.item()}")
+        for idx in range(config.hyper.batch_size):
+            prob_matrix, encoded, decoded = model(mz[idx].to(config.device), i[idx].to(config.device))
+            print("".join(reduce(decode(prob_matrix, log=True).to(config.cpu))), peptide[idx].decode())
+            loss = loss_fn(prob_matrix, encoded, decoded, peptide[idx].decode())
+            torch.autograd.set_detect_anomaly(True)
+            loss.backward()
+            optimizer.step()
+            print(f"Loss: {loss.item()}")
         # # 3. Print gradients for all parameters
         # for name, param in model.named_parameters():
         #     if param.grad is not None:
