@@ -17,7 +17,7 @@ class SpectrumConfig:
 
 class LatentConfig:
     def __init__(self):
-        self.d_model = 144
+        self.d_model = 288
         self.num_layers = 4
         self.linear_num_layers = 4
         self.encoder_num_layers = 4
@@ -34,7 +34,7 @@ class HyperConfig:
         self.mse_weight = 0.1
         self.batch_size = 1
         self.epochs = 10
-        self.learning_rate = 1e-4
+        self.learning_rate = 1e-2
         self.checkpoint_name = "checkpoint.pth"
 
 
