@@ -2,6 +2,8 @@ import argparse
 
 import torch
 
+from src.network.latent import EmbedDecode, EmbedEncode
+
 from .network.spectrum import SpecEmbed
 from .data.data import TrainingDataset
 from .utils.config import Config
@@ -23,9 +25,11 @@ if __name__ == "__main__":
     config = args()
     dataset = TrainingDataset(config)
     se = SpecEmbed(config)
-    print(se.b)
-    mz, i = torch.randn(10), torch.randn(10)
-    print(mz, i)
+    ee = EmbedEncode(config)
+    ed = EmbedDecode(config)
+    mz, i = torch.randn(16), torch.randn(16)
     embed = se.forward(mz, i)
-    print(embed, embed.shape)
-
+    encoded = ee.forward(embed, embed[0])
+    print(encoded)
+    decoded = ed.forward(encoded)
+    print(decoded)
