@@ -4,8 +4,8 @@ import torch
 
 class DatasetConfig:
     def __init__(self):
-        self.training = "../datasets/IVE_v2_train.h5"
-        self.eval = "../datasets/IVE_v2_val.h5"
+        self.training = "../../datasets/IVE_v2/IVE_v2_train.h5"
+        self.eval = "../../datasets/IVE_v2/IVE_v2_val.h5"
         self.masking_prob = 0.1
         self.sigma = 0.01
 
@@ -31,8 +31,8 @@ class SequenceConfig:
 class HyperConfig:
     def __init__(self):
         self.ctc_weight = 1.0
-        self.mse_weight = 0.1
-        self.batch_size = 1
+        self.mse_weight = 0.0
+        self.batch_size = 32
         self.epochs = 10
         self.learning_rate = 1e-2
         self.checkpoint_name = "checkpoint.pth"
