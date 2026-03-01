@@ -4,6 +4,7 @@ import torch
 from torch.utils.data import DataLoader
 
 from src.flows.train import run
+from src.utils.ctc import encode, reduce
 
 from .network.network import Model
 from .utils.loss import get_loss 

@@ -7,7 +7,18 @@ def decode(prob_matrix, log=False):
     return torch.argmax(prob_matrix, dim=1)
 
 def reduce(sequence: torch.Tensor, blank=0):
-    return [chr(i + ord('A') - 1) for i in sequence if i != blank]
+    last = sequence[0]
+    reduced = [] 
+    for i in sequence[1:]:
+        if i == last:
+            continue
+        elif i == blank:
+            last = blank
+            continue
+        else:
+            reduced.append(i)
+            last = i
+    return reduced
 
 def encode(sequence: str):
     return torch.tensor([ord(i) - ord('A') + 1 for i in sequence], dtype=torch.int32)
