@@ -2,10 +2,8 @@ import argparse
 
 import torch
 
-from src.network.latent import EmbedDecode, EmbedEncode
-from src.network.sequence import EmbedSequence
+from src.network.network import Model 
 
-from .network.spectrum import SpecEmbed
 from .data.data import TrainingDataset
 from .utils.config import Config
 
@@ -25,12 +23,8 @@ def args():
 if __name__ == "__main__":
     config = args()
     dataset = TrainingDataset(config)
-    se = SpecEmbed(config)
-    ee = EmbedEncode(config)
-    es = EmbedSequence(config)
+    model = Model(config)
     mz, i = torch.randn(16), torch.randn(16)
-    embed = se.forward(mz, i)
-    encoded = ee.forward(embed, embed[0])
-    print(encoded, encoded.shape)
-    prob_matrix = es.forward(encoded)
+    prob_matrix, decoded = model(mz, i)
     print(prob_matrix, prob_matrix.shape)
+    print(decoded, decoded.shape)
