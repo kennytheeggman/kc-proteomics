@@ -1,28 +1,10 @@
 import argparse
-import torch
-from pathlib import Path
 from .data.data import TrainingDataset
+from .utils.config import Config
 
 
 PROG_NAME = 'KC Proteomics'
 PROG_DESC = 'Training and inference and fine-tuning for semi-supervised proteomics models'
-
-
-class Config:
-    def __init__(self, dataset_training, dataset_eval):
-        # Datasets
-        self.dataset_training = Path(dataset_training)
-        self.dataset_eval = Path(dataset_eval)
-
-        # Torch Config
-        self.cpu = "cpu"
-        accelerator = torch.accelerator.current_accelerator()
-        self.device = accelerator.type if accelerator else "cpu"
-
-    def __str__(self):
-        return f"Datasets(Training: \"{self.dataset_training.name}\", Eval: \"{self.dataset_eval.name}\")" 
-    def __repr__(self):
-        return str(self)
 
 
 def args():
