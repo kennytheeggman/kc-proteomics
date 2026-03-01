@@ -22,4 +22,4 @@ class Model(nn.Module):
         encoded = self.ee.forward(embed, embed[0])
         prob_matrix = self.es.forward(encoded)
         decoded = self.ed.forward(encoded)
-        return prob_matrix, decoded
+        return prob_matrix, embed, decoded
