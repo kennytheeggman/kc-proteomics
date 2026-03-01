@@ -30,13 +30,15 @@ class SequenceConfig:
 
 class HyperConfig:
     def __init__(self):
+        self.ctc_weight = 0.9
+        self.mse_weight = 0.1
         self.batch_size = 32
         self.epochs = 10
         self.learning_rate = 1e-4
 
 
 class Config:
-    def __init__(self, dataset_training, dataset_eval):
+    def __init__(self):
         # Constants
         self.AA_TYPES = 27
 

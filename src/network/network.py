@@ -3,10 +3,10 @@
 
 from torch import nn
 
-from src.network.latent import EmbedDecode, EmbedEncode
-from src.network.sequence import EmbedSequence
-from src.network.spectrum import SpecEmbed
-from src.utils.config import Config
+from ..network.latent import EmbedDecode, EmbedEncode
+from ..network.sequence import EmbedSequence
+from ..network.spectrum import SpecEmbed
+from ..utils.config import Config
 
 
 class Model(nn.Module):
