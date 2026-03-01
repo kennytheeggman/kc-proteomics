@@ -26,11 +26,11 @@ class EmbedEncode(nn.Module):
         self.vector_stack = nn.Sequential(*linear_layers)
 
         self.spectrum_stack = nn.TransformerEncoder(
-            nn.TransformerEncoderLayer(config.embed.d_model, self.num_peaks),
+            nn.TransformerEncoderLayer(config.embed.d_model, self.num_peaks, batch_first=True),
             config.embed.encoder_num_layers
         )
         self.precursor_stack = nn.TransformerDecoder(
-            nn.TransformerDecoderLayer(config.embed.d_model, self.num_peaks),
+            nn.TransformerDecoderLayer(config.embed.d_model, self.num_peaks, batch_first=True),
             config.embed.decoder_num_layers
         )
 
@@ -53,7 +53,7 @@ class EmbedDecode(nn.Module):
         self.config = config
 
         self.spectrum_stack = nn.TransformerEncoder(
-            nn.TransformerEncoderLayer(config.embed.d_model, self.num_peaks),
+            nn.TransformerEncoderLayer(config.embed.d_model, self.num_peaks, batch_first=True),
             config.embed.encoder_num_layers + config.embed.decoder_num_layers
         )
 

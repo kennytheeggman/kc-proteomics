@@ -17,7 +17,7 @@ class EmbedSequence(nn.Module):
         self.encoder_layers = config.seq.encoder_num_layers
 
         self.embedding_stack = nn.TransformerEncoder(
-            nn.TransformerEncoderLayer(config.embed.d_model, self.num_peaks),
+            nn.TransformerEncoderLayer(config.embed.d_model, self.num_peaks, batch_first=True),
             self.encoder_layers
         )
 
