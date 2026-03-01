@@ -32,5 +32,5 @@ class EmbedSequence(nn.Module):
     def forward(self, embedding):
         raw_values = self.embedding_stack(embedding)
         raw_matrix = self.vector_stack(raw_values)
-        prob_matrix = torch.softmax(raw_matrix, dim=0)
+        prob_matrix = torch.log_softmax(raw_matrix, dim=0)
         return prob_matrix

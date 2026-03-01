@@ -22,6 +22,8 @@ class SpecEmbed(nn.Module):
             [(i * ceil(1 / m_min / highs)) for i in range(1, highs + 1, 1)]
         )
         self.b = b.unsqueeze(0)
+        self.b = nn.Parameter(self.b, requires_grad=False)
+        self.register_parameter("b", self.b)
 
     def forward(self, mz: torch.Tensor, i: torch.Tensor):
         mz = 2 * torch.pi * mz.unsqueeze(0).T @ self.b
