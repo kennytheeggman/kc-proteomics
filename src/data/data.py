@@ -6,7 +6,7 @@ from torch.utils.data import Dataset
 
 class PeptideDataset(Dataset):
 
-    def __init__(self, file_path):
+    def __init__(self, file_path, num_peaks):
         super().__init__();
         file = h5py.File(file_path, 'r')
         obj = file['charges']
@@ -22,20 +22,60 @@ class PeptideDataset(Dataset):
         assert isinstance(obj, h5py.Dataset)
         self.spectra: h5py.Dataset = obj
 
-    def __getitem__(self, idx):
+        self.num_peaks = num_peaks
+
+    def __len__(self):
+        return len(self.charges)
+
+    def __getitem__(self, idx) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, str]:
         spectrum_size = len(self.spectra[idx])
-        return (
-            torch.tensor(self.charges[idx]).int(),
-            self.peptides[idx],
-            torch.tensor(self.premzs[idx]).float(),
+        mz, i = (
             torch.from_numpy(np.array(self.spectra[idx])[:int(spectrum_size/2)]),
             torch.from_numpy(np.array(self.spectra[idx])[int(spectrum_size/2):])
+        )
+        return (
+            torch.tensor(self.charges[idx]).int(),
+            torch.tensor(self.premzs[idx]).float(),
+            mz, i, self.peptides[idx]
         )
 
 class TrainingDataset(PeptideDataset):
     def __init__(self, config):
-        super().__init__(config.dataset_training)
+        super().__init__(config.data.training, config.num_peaks)
+        self.masking_prob = config.data.masking_prob
+        self.sigma = config.data.sigma
+
+    def __getitem__(self, idx):
+        charge, premz, mz, i, peptide = super().__getitem__(idx)
+        # select peaks to remove
+        mask = torch.rand(mz.shape) < self.masking_prob
+        mz = mz[~mask]
+        i = i[~mask] 
+        # change all peaks intensities by small amount
+        mz = mz * (1 + (torch.randn(mz.shape) - 0.5) * self.sigma)
+        i = i * (1 + (torch.randn(i.shape) - 0.5) * self.sigma)
+        # truncate or pad to num_peaks
+        mz = torch.cat([premz, mz])
+        i = torch.cat([torch.tensor(1.1).unsqueeze(0), i])
+        if (len(mz) < self.num_peaks):
+            mz = torch.cat([mz, torch.zeros(self.num_peaks - mz.shape[0])])
+            i = torch.cat([i, torch.zeros(self.num_peaks - i.shape[0])])
+        elif (len(mz) > self.num_peaks):
+            mz, i = mz[:self.num_peaks], i[:self.num_peaks]
+        return charge, premz, mz, i, peptide
 
 class EvalDataset(PeptideDataset):
     def __init__(self, config):
-        super().__init__(config.dataset_eval)
+        super().__init__(config.data.eval, config.num_peaks)
+    
+    def __getitem__(self, idx):
+        charge, premz, mz, i, peptide = super().__getitem__(idx)
+        # truncate or pad to num_peaks
+        mz = torch.cat([premz, mz])
+        i = torch.cat([torch.tensor(1.1).unsqueeze(0), i])
+        if (len(mz) < self.num_peaks):
+            mz = torch.cat([mz, torch.zeros(self.num_peaks - mz.shape[0])])
+            i = torch.cat([i, torch.zeros(self.num_peaks - i.shape[0])])
+        elif (len(mz) > self.num_peaks):
+            mz, i = mz[:self.num_peaks], i[:self.num_peaks]
+        return charge, premz, mz, i, peptide
