@@ -8,8 +8,8 @@ def train(config, dataloader, model, loss_fn, optimizer):
     for idx, batch in enumerate(dataloader):
         optimizer.zero_grad()
         charge, premz, mz, i, peptide = batch
-        prob_matrix, encoded, decoded = model(mz[0], i[0])
-        print("".join(reduce(decode(prob_matrix, log=True))), peptide[0].decode())
+        prob_matrix, encoded, decoded = model(mz[0].to(config.device), i[0].to(config.device))
+        print("".join(reduce(decode(prob_matrix, log=True).to(config.cpu))), peptide[0].decode())
         loss = loss_fn(prob_matrix, encoded, decoded, peptide[0].decode())
         torch.autograd.set_detect_anomaly(True)
         loss.backward()
@@ -29,7 +29,7 @@ def evaluate(config, dataloader, model, loss_fn):
     with torch.no_grad():
         for idx, batch in enumerate(dataloader):
             charge, premz, mz, i, peptide = batch
-            prob_matrix, encoded, decoded = model(mz, i)
+            prob_matrix, encoded, decoded = model(mz[0].to(config.device), i[0].to(config.device))
             loss = loss_fn(prob_matrix, encoded, decoded, peptide)
             test_loss += loss.item()
     test_loss /= len(dataloader)

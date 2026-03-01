@@ -47,6 +47,7 @@ class Config:
         self.cpu = "cpu"
         accelerator = torch.accelerator.current_accelerator()
         self.device = accelerator.type if accelerator else "cpu"
+        self.device = "cpu"
 
         # Hyperparameters
         self.num_peaks = 48

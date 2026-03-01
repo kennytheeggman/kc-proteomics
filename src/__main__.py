@@ -28,6 +28,7 @@ if __name__ == "__main__":
     config = args()
     dataset = TrainingDataset(config)
     model = Model(config)
+    model.to(config.device)
     loss_fn = get_loss(config)
 
     train_dataloader = DataLoader(dataset, batch_size=config.hyper.batch_size, shuffle=True)
