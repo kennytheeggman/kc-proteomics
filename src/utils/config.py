@@ -16,6 +16,11 @@ class LatentConfig:
         self.encoder_num_layers = 4
         self.decoder_num_layers = 4
 
+class SequenceConfig:
+    def __init__(self):
+        self.linear_num_layers = 4
+        self.encoder_num_layers = 4
+
 class HyperConfig:
     def __init__(self):
         self.batch_size = 32
@@ -25,6 +30,9 @@ class HyperConfig:
 
 class Config:
     def __init__(self, dataset_training, dataset_eval):
+        # Constants
+        self.AA_TYPES = 27
+
         # Datasets
         self.dataset_training = Path(dataset_training)
         self.dataset_eval = Path(dataset_eval)
@@ -38,6 +46,7 @@ class Config:
         self.num_peaks = 16
         self.spec = SpectrumConfig()
         self.embed = LatentConfig()
+        self.seq = SequenceConfig()
         self.hyper = HyperConfig()
 
     def __str__(self):
