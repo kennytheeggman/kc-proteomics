@@ -1,9 +1,14 @@
 import argparse
 
+import torch
+from torch.utils.data import DataLoader
+
+from src.flows.train import run
+
 from .network.network import Model
 from .utils.loss import get_loss 
 
-from .data.data import TrainingDataset
+from .data.data import EvalDataset, TrainingDataset
 from .utils.config import Config
 
 
@@ -23,11 +28,10 @@ if __name__ == "__main__":
     config = args()
     dataset = TrainingDataset(config)
     model = Model(config)
-    model.to(config.device)
     loss_fn = get_loss(config)
-    print(dataset[0])
-    charge, premz, mz, i, peptide = dataset[0]
-    peptide = peptide.decode()
-    prob_matrix, encoded, decoded = model(mz.to(config.device), i.to(config.device))
-    loss = loss_fn(prob_matrix.to(config.cpu), encoded.to(config.cpu), decoded.to(config.cpu), peptide)
-    print(loss)
+
+    train_dataloader = DataLoader(dataset, batch_size=config.hyper.batch_size, shuffle=True)
+    eval_dataloader = DataLoader(EvalDataset(config), batch_size=config.hyper.batch_size, shuffle=False)
+
+    optimizer = torch.optim.SGD(model.parameters(), lr=config.hyper.learning_rate)
+    run(config, model, loss_fn, optimizer, train_dataloader, eval_dataloader)
