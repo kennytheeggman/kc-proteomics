@@ -1,7 +1,7 @@
 import torch
-from torch.utils.data import Dataset
 import numpy as np
 import h5py
+from torch.utils.data import Dataset
 
 
 class PeptideDataset(Dataset):
@@ -9,11 +9,18 @@ class PeptideDataset(Dataset):
     def __init__(self, file_path):
         super().__init__();
         file = h5py.File(file_path, 'r')
-        self.charges = file['charges']
-        self.mapping = file['mapping']
-        self.peptides = file['peptides']
-        self.premzs = file['premzs']
-        self.spectra = file['spectra']
+        obj = file['charges']
+        assert isinstance(obj, h5py.Dataset)
+        self.charges: h5py.Dataset = obj 
+        obj = file['peptides']
+        assert isinstance(obj, h5py.Dataset)
+        self.peptides: h5py.Dataset = obj 
+        obj = file['premzs']
+        assert isinstance(obj, h5py.Dataset)
+        self.premzs: h5py.Dataset = obj 
+        obj = file['spectra']
+        assert isinstance(obj, h5py.Dataset)
+        self.spectra: h5py.Dataset = obj
 
     def __getitem__(self, idx):
         spectrum_size = len(self.spectra[idx])
