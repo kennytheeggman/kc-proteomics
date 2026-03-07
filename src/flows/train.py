@@ -14,6 +14,7 @@ def train(config, dataloader, model, loss_fn, optimizer):
             loss = loss_fn(prob_matrix, encoded, decoded, peptide[idx].decode())
             torch.autograd.set_detect_anomaly(True)
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()
             print(f"Loss: {loss.item()}")
         # # 3. Print gradients for all parameters
