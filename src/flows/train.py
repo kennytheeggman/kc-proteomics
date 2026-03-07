@@ -3,14 +3,15 @@ import torch
 from src.utils.ctc import decode, reduce
 
 
-def train(config, dataloader, model, loss_fn, optimizer):
+def train(config, dataloader, model, loss_fn, optimizer):  # fix decode imputs: verify masses
     model.train()
     for idx, batch in enumerate(dataloader):
         optimizer.zero_grad()
         charge, premz, mz, i, peptide = batch
+        prem = premz*charge
         for idx in range(config.hyper.batch_size):
             prob_matrix, encoded, decoded = model(mz[idx].to(config.device), i[idx].to(config.device))
-            print("".join(reduce(decode(prob_matrix, log=True).to(config.cpu))), peptide[idx].decode())
+            print("".join(reduce(decode(prob_matrix, config.aa_masses, prem, config.tolerance, config.mass_res).to(config.cpu))), peptide[idx].decode())
             loss = loss_fn(prob_matrix, encoded, decoded, peptide[idx].decode())
             torch.autograd.set_detect_anomaly(True)
             loss.backward()
