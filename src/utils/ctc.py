@@ -9,7 +9,7 @@ def decode(probabilities, masses, precursor_m, tol, mass_n):
     max_seq_len = probabilities.shape[0]
 
     dm = precursor_m/mass_n
-    padding_cols = math.floor(tol/dm)
+    padding_cols = math.floor((tol/dm).item())
     n_cols = mass_n + padding_cols
 
     dp = torch.full((max_seq_len, n_cols), float('-inf'))
@@ -33,7 +33,7 @@ def decode(probabilities, masses, precursor_m, tol, mass_n):
                     score = dp[i, m] + probabilities[i, a]  # prob[i], because dp is one idx ahead
                     if score > dp[i+1, discretized_mass]:
                         dp[i+1, discretized_mass] = score
-                        parent[i+1, discretized_mass] = torch.tensor([m, a]) # store prev mass and next aa index
+                        parent[i+1, discretized_mass] = torch.tensor([m, a], dtype=torch.float32) # store prev mass and next aa index
 
     # slice out target mass scores, within tol, and find best
     best_score = float('-inf')

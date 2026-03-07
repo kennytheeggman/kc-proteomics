@@ -10,8 +10,9 @@ def train(config, dataloader, model, loss_fn, optimizer):  # fix decode imputs: 
         charge, premz, mz, i, peptide = batch
         prem = premz*charge
         for idx in range(config.hyper.batch_size):
+            prem_cur = prem[idx]
             prob_matrix, encoded, decoded = model(mz[idx].to(config.device), i[idx].to(config.device))
-            print("".join(reduce(decode(prob_matrix, config.aa_masses, prem, config.tolerance, config.mass_res).to(config.cpu))), peptide[idx].decode())
+            print("".join(reduce(decode(prob_matrix, config.aa_masses, prem_cur, config.tolerance, config.mass_res).to(config.cpu))), peptide[idx].decode())
             loss = loss_fn(prob_matrix, encoded, decoded, peptide[idx].decode())
             torch.autograd.set_detect_anomaly(True)
             loss.backward()
