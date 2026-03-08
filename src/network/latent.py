@@ -12,9 +12,10 @@ class EmbedEncode(nn.Module):
         super().__init__()
         self.d_input = config.spec.num_features
         self.d_model = config.embed.d_model
-        self.num_peaks = config.num_peaks
+        self.num_heads = config.embed.num_heads
         self.layers = config.embed.linear_num_layers
         self.config = config
+        self.num_peaks = config.num_peaks
 
         # linear layers to project to model dimension, number of features in each layer is lerped 
         linear_layers = [
@@ -26,11 +27,11 @@ class EmbedEncode(nn.Module):
         self.vector_stack = nn.Sequential(*linear_layers)
 
         self.spectrum_stack = nn.TransformerEncoder(
-            nn.TransformerEncoderLayer(config.embed.d_model, self.num_peaks, batch_first=True),
+            nn.TransformerEncoderLayer(config.embed.d_model, self.num_heads, batch_first=True),
             config.embed.encoder_num_layers
         )
         self.precursor_stack = nn.TransformerDecoder(
-            nn.TransformerDecoderLayer(config.embed.d_model, self.num_peaks, batch_first=True),
+            nn.TransformerDecoderLayer(config.embed.d_model, self.num_heads, batch_first=True),
             config.embed.decoder_num_layers
         )
 
@@ -48,12 +49,12 @@ class EmbedDecode(nn.Module):
         super().__init__()
         self.d_model = config.embed.d_model
         self.d_output = config.spec.num_features
-        self.num_peaks = config.num_peaks
+        self.num_heads = config.embed.num_heads
         self.layers = config.embed.linear_num_layers
         self.config = config
 
         self.spectrum_stack = nn.TransformerEncoder(
-            nn.TransformerEncoderLayer(config.embed.d_model, self.num_peaks, batch_first=True),
+            nn.TransformerEncoderLayer(config.embed.d_model, self.num_heads, batch_first=True),
             config.embed.encoder_num_layers + config.embed.decoder_num_layers
         )
 
