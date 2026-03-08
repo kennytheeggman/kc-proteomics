@@ -56,11 +56,11 @@ def decode(probabilities, masses, precursor_m, tol, mass_n):
             m, a = parent[i, cur_mass]  # m is idx
             m = int(m.item())
             seq[i] = a
-            cur_mass = m  # is it = m or is it -= m, should be = m right?
+            cur_mass = m  # is it = m or is it -= m, should be = m right? m stores prev mass, mass = m + mass_idx
 
         return seq[1:-1]  # it really likes outputting s's and q's lol?
 
-def decode_temp(prob_matrix):
+def decode_temporary(prob_matrix):
     return torch.argmax(prob_matrix, dim=1)
 
 def reduce(sequence: torch.Tensor, blank=0):

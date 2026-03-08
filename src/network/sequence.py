@@ -12,12 +12,12 @@ class EmbedSequence(nn.Module):
         super().__init__()
         self.d_model = config.embed.d_model
         self.d_output = config.AA_TYPES
-        self.num_peaks = config.num_peaks
+        self.num_heads = config.seq.num_heads
         self.linear_layers = config.seq.linear_num_layers
         self.encoder_layers = config.seq.encoder_num_layers
 
         self.embedding_stack = nn.TransformerEncoder(
-            nn.TransformerEncoderLayer(config.embed.d_model, self.num_peaks, batch_first=True),
+            nn.TransformerEncoderLayer(config.embed.d_model, self.num_heads, batch_first=True),
             self.encoder_layers
         )
 

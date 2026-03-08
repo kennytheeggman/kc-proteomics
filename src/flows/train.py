@@ -1,9 +1,9 @@
 import torch
 
-from src.utils.ctc import decode, reduce
+from src.utils.ctc import decode, reduce, decode_temporary
 
 
-def train(config, dataloader, model, loss_fn, optimizer):  # fix decode imputs: verify masses
+def train(config, dataloader, model, loss_fn, optimizer, scheduler):  # fix decode imputs: verify masses
     model.train()
     for idx, batch in enumerate(dataloader):
         optimizer.zero_grad()
@@ -12,12 +12,14 @@ def train(config, dataloader, model, loss_fn, optimizer):  # fix decode imputs: 
         for idx in range(config.hyper.batch_size):
             prem_cur = prem[idx]
             prob_matrix, encoded, decoded = model(mz[idx].to(config.device), i[idx].to(config.device))
-            print("".join(reduce(decode(prob_matrix, config.aa_masses, prem_cur, config.tolerance, config.mass_res).to(config.cpu))), peptide[idx].decode())
+            print("".join(reduce(decode_temporary(prob_matrix).to(config.cpu))), peptide[idx].decode())
+            # print("".join(reduce(decode(prob_matrix, config.aa_masses, prem_cur, config.tolerance, config.mass_res).to(config.cpu))), peptide[idx].decode())
             loss = loss_fn(prob_matrix, encoded, decoded, peptide[idx].decode())
             torch.autograd.set_detect_anomaly(True)
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()
+            scheduler.step()
             print(f"Loss: {loss.item()}")
         # # 3. Print gradients for all parameters
         # for name, param in model.named_parameters():
@@ -40,9 +42,9 @@ def evaluate(config, dataloader, model, loss_fn):
     test_loss /= len(dataloader) * config.hyper.batch_size
     print(f"Test loss: {test_loss}")
 
-def run(config, model, loss_fn, optimizer, train_dataloader, eval_dataloader):
+def run(config, model, loss_fn, optimizer, scheduler, train_dataloader, eval_dataloader):
     for epoch in range(config.hyper.epochs):
         print(f"Epoch: {epoch}")
-        train(config, train_dataloader, model, loss_fn, optimizer)
+        train(config, train_dataloader, model, loss_fn, optimizer, scheduler)
         evaluate(config, eval_dataloader, model, loss_fn)
         torch.save(model.state_dict(), f"{config.hyper.checkpoint_name}")

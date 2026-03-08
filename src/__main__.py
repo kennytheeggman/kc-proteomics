@@ -36,4 +36,5 @@ if __name__ == "__main__":
     eval_dataloader = DataLoader(EvalDataset(config), batch_size=config.hyper.batch_size, shuffle=False)
 
     optimizer = torch.optim.SGD(model.parameters(), lr=config.hyper.learning_rate)
-    run(config, model, loss_fn, optimizer, train_dataloader, eval_dataloader)
+    scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=config.hyper.max_learning_rate, steps_per_epoch=len(train_dataloader), epochs=config.hyper.epochs)
+    run(config, model, loss_fn, optimizer, scheduler, train_dataloader, eval_dataloader)
