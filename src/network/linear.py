@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 
-class FeedForward(nn.Module):
+class FeedForward(nn.Module):  # no layer normalization, but should be fine
 
     # hidden_dims is [size of hidden layer 1, size of hidden layer 2, etc]
     def __init__(self, input_dim, output_dim, hidden_dims, normalizer=nn.ReLU, bias=True, dropout=0):
