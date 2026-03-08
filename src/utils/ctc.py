@@ -19,7 +19,7 @@ def decode(probabilities, masses, precursor_m, tol, mass_n):
     # fill out dynamic programming score array
     for i in range(max_seq_len-1):
         for m in range(n_cols):
-            if dp[i][m] > float('-inf'):
+            if dp[i, m] > float('-inf'):
                 for a in range(len(masses)):
                     
                     aa = masses[a]
@@ -46,21 +46,26 @@ def decode(probabilities, masses, precursor_m, tol, mass_n):
                 pos = (j, i)
                         
     # retrieve aa sequence from parent
-    seq = torch.empty((pos[0] + 1))  # maybe best to pre-allocate memory since we know the size
     if pos is None:
         print("did not find")
+        return torch.tensor([0])
     else:
+        seq = torch.empty((pos[0] + 1), dtype=torch.long)  # maybe best to pre-allocate memory since we know the size
         cur_mass = pos[1]
         for i in range(pos[0], 0, -1):
             m, a = parent[i, cur_mass]  # m is idx
             m = int(m.item())
             seq[i] = a
-            cur_mass -= m
-    return seq[1:-1]
+            cur_mass = m  # is it = m or is it -= m, should be = m right?
+
+        return seq[1:-1]  # it really likes outputting s's and q's lol?
+
+def decode_temp(prob_matrix):
+    return torch.argmax(prob_matrix, dim=1)
 
 def reduce(sequence: torch.Tensor, blank=0):
     last = sequence[0]
-    reduced = [last] 
+    reduced = [chr(int(last) + ord('A') - 1)]
     for i in sequence[1:]:
         if i == last:
             continue
