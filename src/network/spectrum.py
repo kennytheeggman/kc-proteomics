@@ -5,7 +5,7 @@ from math import ceil
 from ..utils.config import Config
 import torch.nn as nn
 import torch
-from linear import FeedForward
+from ..network.linear import FeedForward
 
 class SpecEmbed(nn.Module):
     def __init__(self, config: Config):
@@ -16,7 +16,7 @@ class SpecEmbed(nn.Module):
         m_min = config.spec.m_min
         m_max = config.spec.m_max
         k = int(1/m_min)
-        len_b = m_max + k
+        len_b = int(m_max + k)
         self.num_peaks = num_peaks
 
         # initialize network variables
@@ -33,7 +33,7 @@ class SpecEmbed(nn.Module):
         self.dm = dm
         self.sz = dm + dp
 
-        # intiialize arrays
+        # intialize arrays
         raw_encode = torch.empty((2, num_peaks))
         fourier_encode = torch.empty((2*len_b, num_peaks))
         premz_encode = torch.empty((2*len_b + 1, 1))  # first element will be the raw encoding
@@ -48,7 +48,6 @@ class SpecEmbed(nn.Module):
         self.ff_fourier = FeedForward(input_dim=2*len_b, output_dim=dm, hidden_dims=hidden_fourier, dropout=dropout_fourier)
         self.ff_raw = FeedForward(input_dim=2, output_dim=dp, hidden_dims=hidden_raw, dropout=dropout_raw)
         self.ff_premz = FeedForward(input_dim = 2*len_b+1, output_dim = self.sz, hidden_dims=hidden_premz, dropout=dropout_premz)
-
 
 
     def forward(self, mz:torch.Tensor, i:torch.Tensor, premz):
