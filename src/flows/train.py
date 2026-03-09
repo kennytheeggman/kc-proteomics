@@ -11,7 +11,7 @@ def train(config, dataloader, model, loss_fn, optimizer, scheduler, loss_history
         prem = premz*charge
         for idx in range(config.hyper.batch_size):
             prem_cur = prem[idx]
-            prob_matrix, encoded, decoded = model(mz[idx].to(config.device), i[idx].to(config.device))
+            prob_matrix, encoded, decoded = model(mz[idx].to(config.device), i[idx].to(config.device), premz[idx].to(config.device))
             print("".join(reduce(decode_temporary(prob_matrix).to(config.cpu))), peptide[idx].decode())
             # print("".join(reduce(decode(prob_matrix, config.aa_masses, prem_cur, config.tolerance, config.mass_res).to(config.cpu))), peptide[idx].decode())
             loss = loss_fn(prob_matrix, encoded, decoded, peptide[idx].decode())
@@ -41,7 +41,7 @@ def evaluate(config, dataloader, model, loss_fn):
         for idx, batch in enumerate(dataloader):
             charge, premz, mz, i, peptide = batch
             for idx in range(config.hyper.batch_size):
-                prob_matrix, encoded, decoded = model(mz[0].to(config.device), i[0].to(config.device))
+                prob_matrix, encoded, decoded = model(mz[0].to(config.device), i[0].to(config.device), premz[0].to(config.device))
                 loss = loss_fn(prob_matrix, encoded, decoded, peptide)
                 test_loss += loss.item()
     test_loss /= len(dataloader) * config.hyper.batch_size

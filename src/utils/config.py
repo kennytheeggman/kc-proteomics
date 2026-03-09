@@ -13,7 +13,17 @@ class SpectrumConfig:
     def __init__(self):
         self.m_min = 1e-4
         self.m_max = 1e3
+        self.num_peaks = 60  # this needs to be the same as below, need to reorganize everything later
         self.num_features = 4096
+
+        self.dm = 980
+        self.dp = 44
+        self.dropout_fourier = 0.5
+        self.dropout_raw = 0.5
+        self.dropout_premz = 0.5
+        self.hidden_fourier = []
+        self.hidden_raw = []
+        self.hidden_premz = []
 
 class LatentConfig:
     def __init__(self):
@@ -58,7 +68,7 @@ class Config:
         self.device = "cpu"
 
         # Hyperparameters
-        self.num_peaks = 48 
+        self.num_peaks = 60 
         self.data = DatasetConfig()
         self.spec = SpectrumConfig()
         self.embed = LatentConfig()
