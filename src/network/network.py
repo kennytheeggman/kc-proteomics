@@ -17,9 +17,9 @@ class Model(nn.Module):
         self.es = EmbedSequence(config)
         self.ed = EmbedDecode(config)
 
-    def forward(self, mz, i):
-        embed = self.se.forward(mz, i)
-        encoded = self.ee.forward(embed, embed[0])
+    def forward(self, mz, i, premz):
+        seq_embed, p_embed = self.se.forward(mz, i, premz)
+        encoded = self.ee.forward(seq_embed, p_embed)  # seq_embed shape is (seq_len, d_model) and p_embed shape is (d_model)
         prob_matrix = self.es.forward(encoded)
         decoded = self.ed.forward(encoded)
-        return prob_matrix, embed, decoded
+        return prob_matrix, seq_embed, decoded
