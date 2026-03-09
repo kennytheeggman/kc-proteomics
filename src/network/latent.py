@@ -10,7 +10,7 @@ from ..utils.config import Config
 class EmbedEncode(nn.Module):
     def __init__(self, config: Config):
         super().__init__()
-        self.d_input = config.spec.num_features
+        self.d_input = config.spec.dm + config.spec.dp
         self.d_model = config.embed.d_model
         self.num_heads = config.embed.num_heads
         self.layers = config.embed.linear_num_layers
@@ -37,7 +37,7 @@ class EmbedEncode(nn.Module):
 
     def forward(self, spectrum, precursor):
         projected_spectrum = self.vector_stack(spectrum)
-        projected_precursor = self.vector_stack(precursor).unsqueeze(0).repeat(self.num_peaks, 1)
+        projected_precursor = self.vector_stack(precursor).repeat(self.num_peaks, 1)
         transformed_spectrum = self.spectrum_stack(projected_spectrum)
         transformed_combined = self.precursor_stack(transformed_spectrum, projected_precursor)
         return transformed_combined
@@ -48,7 +48,7 @@ class EmbedDecode(nn.Module):
     def __init__(self, config: Config):
         super().__init__()
         self.d_model = config.embed.d_model
-        self.d_output = config.spec.num_features
+        self.d_output = config.spec.dm + config.spec.dp
         self.num_heads = config.embed.num_heads
         self.layers = config.embed.linear_num_layers
         self.config = config
