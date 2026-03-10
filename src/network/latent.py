@@ -33,7 +33,7 @@ class EmbedEncode(nn.Module):
 
     def forward(self, spectrum, precursor):
         projected_spectrum = self.vector_stack(spectrum)
-        projected_precursor = self.vector_stack(precursor).repeat(self.num_peaks, 1)
+        projected_precursor = self.vector_stack(precursor).unsqueeze(0).unsqueeze(0)
         transformed_spectrum = self.spectrum_stack(projected_spectrum)
         transformed_combined = self.precursor_stack(transformed_spectrum, projected_precursor)
         return transformed_combined
