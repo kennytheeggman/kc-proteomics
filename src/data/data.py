@@ -49,7 +49,6 @@ class TrainingDataset(PeptideDataset):
         charge, premz, mz, i, peptide = super().__getitem__(idx)
 
         # temporarily remove everything
-        # also format of premz is wrong, so comment that out too
 
         # # select peaks to remove
         # mask = torch.rand(mz.shape) < self.masking_prob
@@ -84,3 +83,8 @@ class EvalDataset(PeptideDataset):
         elif (len(mz) > self.num_peaks):
             mz, i = mz[:self.num_peaks], i[:self.num_peaks]
         return charge, premz, mz, i, peptide
+    
+
+def collate_fn(batch):
+    charge, premz, mz, i, peptide = zip(*batch)
+    return torch.stack(charge), torch.stack(premz), torch.stack(mz), torch.stack(i), torch.stack(peptide)
