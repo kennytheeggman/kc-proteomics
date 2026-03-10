@@ -34,7 +34,7 @@ class EmbedSequence(nn.Module):
         # hidden_dims = [ceil((self.d_output - self.d_model) * (i / self.linear_layers) + self.d_model) for i in range(1, self.linear_layers)]
         
         # final working version
-        hidden_dims = [self.d_model*4, self.d_model*4]  # go up and then go down
+        hidden_dims = [self.d_model*4, self.d_model*4]  # better than [self.d_model*4, self.d_model], the transformer version
         self.vector_stack = FeedForward(input_dim=self.d_model, output_dim=self.d_output, hidden_dims=hidden_dims)
 
     def forward(self, embedding):
