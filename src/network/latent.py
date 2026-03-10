@@ -5,6 +5,7 @@ from torch import nn
 from math import ceil
 
 from ..utils.config import Config
+from ..network.linear import FeedForward
 
 
 class EmbedEncode(nn.Module):
@@ -18,13 +19,8 @@ class EmbedEncode(nn.Module):
         self.num_peaks = config.num_peaks
 
         # linear layers to project to model dimension, number of features in each layer is lerped 
-        linear_layers = [
-            nn.Linear(
-               ceil((self.d_model - self.d_input) * (i / self.layers) + self.d_input), 
-               ceil((self.d_model - self.d_input) * ((i + 1) / self.layers) + self.d_input)
-            ) for i in range(self.layers)
-        ]
-        self.vector_stack = nn.Sequential(*linear_layers)
+        hidden_dims = [ceil((self.d_model - self.d_input) * (i / self.layers) + self.d_input) for i in range(1, self.layers)]
+        self.vector_stack = FeedForward(input_dim=self.d_input, output_dim=self.d_model, hidden_dims=hidden_dims)
 
         self.spectrum_stack = nn.TransformerEncoder(
             nn.TransformerEncoderLayer(config.embed.d_model, self.num_heads, batch_first=True),
@@ -59,13 +55,8 @@ class EmbedDecode(nn.Module):
         )
 
         # linear layers to project to model dimension, number of features in each layer is lerped 
-        linear_layers = [
-            nn.Linear(
-                ceil((self.d_output - self.d_model) * (i / self.layers) + self.d_model), 
-                ceil((self.d_output - self.d_model) * ((i + 1) / self.layers) + self.d_model)
-            ) for i in range(self.layers)
-        ]
-        self.vector_stack = nn.Sequential(*linear_layers)
+        hidden_dims = [ceil((self.d_output - self.d_model) * (i / self.layers) + self.d_model) for i in range(1, self.layers)]
+        self.vector_stack = FeedForward(input_dim=self.d_model, output_dim=self.d_output, hidden_dims=hidden_dims)
 
     def forward(self, embedding):
         transformed_spectrum = self.spectrum_stack(embedding)
