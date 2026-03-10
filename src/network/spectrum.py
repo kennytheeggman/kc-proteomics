@@ -1,5 +1,5 @@
 # spectrum to vector and vector to spectrum modules
-# ignore all premz code i misunderstood data oops
+# !!! ignore all premz code i misunderstood data oops
 
 from math import ceil
 from ..utils.config import Config
@@ -33,16 +33,12 @@ class SpecEmbed(nn.Module):
         self.dm = dm
         self.sz = dm + dp
 
-        # intialize arrays
-        raw_encode = torch.empty((2, num_peaks))
-        fourier_encode = torch.empty((2*len_b, num_peaks))
-        premz_encode = torch.empty((2*len_b + 1, 1))  # first element will be the raw encoding
+        # intialize arrays, apparently they have to be these register buffer things?
+        self.register_buffer('raw_encode', torch.empty((2, num_peaks)))
+        self.register_buffer('fourier_encode', torch.empty((2*len_b, num_peaks)))
+        self.register_buffer('premz_encode', torch.empty((2*len_b + 1, 1)))  # first element will be the raw encoding
         b = torch.cat((torch.arange(m_max, 0, -1), m_min*torch.arange(k, 0, -1))).reshape(-1, 1)
-
-        self.raw_encode = raw_encode
-        self.fourier_encode = fourier_encode
-        self.premz_encode = premz_encode
-        self.b = b
+        self.register_buffer('b', b)
 
         # set up feed forward networks
         self.ff_fourier = FeedForward(input_dim=2*len_b, output_dim=dm, hidden_dims=hidden_fourier, dropout=dropout_fourier)
