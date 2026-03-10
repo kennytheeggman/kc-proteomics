@@ -21,6 +21,14 @@ class EmbedSequence(nn.Module):
             self.encoder_layers
         )
 
+        # linear_layers = [
+        #     nn.Linear(
+        #         ceil((self.d_output - self.d_model) * (i / self.linear_layers) + self.d_model), 
+        #         ceil((self.d_output - self.d_model) * ((i + 1) / self.linear_layers) + self.d_model)
+        #     ) for i in range(self.linear_layers)
+        # ]
+        # self.vector_stack = nn.Sequential(*linear_layers)
+
         hidden_dims = [ceil((self.d_output - self.d_model) * (i / self.linear_layers) + self.d_model) for i in range(1, self.linear_layers)]
         self.vector_stack = FeedForward(input_dim=self.d_model, output_dim=self.d_output, hidden_dims=hidden_dims)
 
