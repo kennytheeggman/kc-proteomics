@@ -58,23 +58,23 @@ def decode(probabilities, masses, precursor_m, tol, mass_n):
             seq[i] = a
             cur_mass = m  # is it = m or is it -= m, should be = m right? m stores prev mass, mass = m + mass_idx
 
-        return seq[1:-1]  # it really likes outputting s's and q's lol?
+        return seq[1:]
 
 def decode_temporary(prob_matrix):
     return torch.argmax(prob_matrix, dim=1)
 
+
 def reduce(sequence: torch.Tensor, blank=0):
-    last = sequence[0]
-    reduced = [chr(int(last) + ord('A') - 1)]
-    for i in sequence[1:]:
-        if i == last:
-            continue
-        elif i == blank:
+    last = None
+    reduced = []
+    for i in sequence:
+        token = int(i)
+        if token == blank:
             last = blank
             continue
-        else:
-            reduced.append(chr(i + ord('A') - 1))
-            last = i
+        if token != last:
+            reduced.append(chr(token + ord('A') - 1))
+        last = token
     return reduced
 
 def encode(sequence: str):

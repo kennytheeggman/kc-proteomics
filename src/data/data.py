@@ -51,13 +51,13 @@ class TrainingDataset(PeptideDataset):
         # temporarily remove everything
 
         # # select peaks to remove
-        # mask = torch.rand(mz.shape) < self.masking_prob
-        # mz = mz[~mask]
-        # i = i[~mask] 
-        # # change all peaks intensities by small amount
-        # mz = mz * (1 + (torch.randn(mz.shape) - 0.5) * self.sigma)
-        # i = i * (1 + (torch.randn(i.shape) - 0.5) * self.sigma)
-        # # truncate or pad to num_peaks
+        mask = torch.rand(mz.shape) < self.masking_prob
+        mz = mz[~mask]
+        i = i[~mask] 
+        # change all peaks intensities by small amount
+        mz = mz * (1 + (torch.randn(mz.shape) - 0.5) * self.sigma)
+        i = i * (1 + (torch.randn(i.shape) - 0.5) * self.sigma)
+        # truncate or pad to num_peaks
         mz = torch.cat([premz, mz])
         i = torch.cat([torch.tensor(1.1).unsqueeze(0), i])
         # padding
@@ -87,4 +87,4 @@ class EvalDataset(PeptideDataset):
 
 def collate_fn(batch):
     charge, premz, mz, i, peptide = zip(*batch)
-    return torch.stack(charge), torch.stack(premz), torch.stack(mz), torch.stack(i), torch.stack(peptide)
+    return torch.stack(charge), torch.stack(premz), torch.stack(mz), torch.stack(i), list(peptide)
