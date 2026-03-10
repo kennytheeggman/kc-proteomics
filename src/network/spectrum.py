@@ -1,5 +1,5 @@
 # spectrum to vector and vector to spectrum modules
-
+# ignore all premz code i misunderstood data oops
 
 from math import ceil
 from ..utils.config import Config
@@ -80,7 +80,7 @@ class SpecEmbed(nn.Module):
         # append along correct axis
         x = torch.cat((encoded_fourier, encoded_raw), dim=-1)
 
-        return x, encoded_premz
+        return x, x[0]
 
 
 # above architecture is more similar to literature, for testing for now
