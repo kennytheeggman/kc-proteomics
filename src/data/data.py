@@ -47,16 +47,21 @@ class TrainingDataset(PeptideDataset):
 
     def __getitem__(self, idx):
         charge, premz, mz, i, peptide = super().__getitem__(idx)
-        # select peaks to remove
-        mask = torch.rand(mz.shape) < self.masking_prob
-        mz = mz[~mask]
-        i = i[~mask] 
-        # change all peaks intensities by small amount
-        mz = mz * (1 + (torch.randn(mz.shape) - 0.5) * self.sigma)
-        i = i * (1 + (torch.randn(i.shape) - 0.5) * self.sigma)
-        # truncate or pad to num_peaks
+
+        # temporarily remove everything
+        # also format of premz is wrong, so comment that out too
+
+        # # select peaks to remove
+        # mask = torch.rand(mz.shape) < self.masking_prob
+        # mz = mz[~mask]
+        # i = i[~mask] 
+        # # change all peaks intensities by small amount
+        # mz = mz * (1 + (torch.randn(mz.shape) - 0.5) * self.sigma)
+        # i = i * (1 + (torch.randn(i.shape) - 0.5) * self.sigma)
+        # # truncate or pad to num_peaks
         mz = torch.cat([premz, mz])
         i = torch.cat([torch.tensor(1.1).unsqueeze(0), i])
+        # padding
         if (len(mz) < self.num_peaks):
             mz = torch.cat([mz, torch.zeros(self.num_peaks - mz.shape[0])])
             i = torch.cat([i, torch.zeros(self.num_peaks - i.shape[0])])
