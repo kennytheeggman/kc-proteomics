@@ -30,7 +30,7 @@ class EmbedSequence(nn.Module):
         # self.vector_stack = nn.Sequential(*linear_layers)
 
         hidden_dims = [ceil((self.d_output - self.d_model) * (i / self.linear_layers) + self.d_model) for i in range(1, self.linear_layers)]
-        self.vector_stack = FeedForward(input_dim=self.d_model, output_dim=self.d_output, hidden_dims=hidden_dims)
+        self.vector_stack = FeedForward(input_dim=self.d_model, output_dim=self.d_output, hidden_dims=hidden_dims, normalizer=None)
 
     def forward(self, embedding):
         raw_values = self.embedding_stack(embedding)
