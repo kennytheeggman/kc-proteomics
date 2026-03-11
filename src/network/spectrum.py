@@ -1,5 +1,5 @@
 # spectrum to vector and vector to spectrum modules
-# !!! ignore all premz code i misunderstood data oops
+# !!! ignore all premz code i misunderstood data oops, it's also incomplete
 
 from math import ceil
 from ..utils.config import Config
@@ -18,6 +18,7 @@ class SpecEmbed(nn.Module):
         k = int(1/m_min)
         len_b = int(m_max + k)
         self.num_peaks = num_peaks
+        self.len_b = len_b
 
         # initialize network variables
         dp = config.spec.dp
@@ -34,10 +35,8 @@ class SpecEmbed(nn.Module):
         self.sz = dm + dp
 
         # intialize arrays, apparently they have to be these register buffer things?
-        self.register_buffer('raw_encode', torch.empty((2, num_peaks)))
-        self.register_buffer('fourier_encode', torch.empty((2*len_b, num_peaks)))
         self.register_buffer('premz_encode', torch.empty((2*len_b + 1, 1)))  # first element will be the raw encoding
-        b = torch.cat((torch.arange(m_max, 0, -1), m_min*torch.arange(k, 0, -1))).reshape(-1, 1)
+        b = torch.cat((torch.arange(m_max, 0, -1), m_min*torch.arange(k, 0, -1)))
         self.register_buffer('b', b)
 
         # set up feed forward networks
@@ -47,37 +46,31 @@ class SpecEmbed(nn.Module):
 
 
     def forward(self, mz:torch.Tensor, i:torch.Tensor, premz):
-        
-        n_total = len(mz)
 
-        # fill in raw encoding
-        self.raw_encode[0, :n_total] = mz
-        self.raw_encode[1, :n_total] = i
-        self.premz_encode[0, 0] = premz
+        # note: mz would be [batch, num_peaks, 1]
+
+        # fill in raw encoding and pass through feedforward
+        raw_encode = torch.stack([mz, i], dim=-1)  # [batch, num_peaks, 2]
+        encoded_raw = self.ff_raw(raw_encode)  # [batch, num_peaks, dp]
+        mzs = raw_encode[:, :, 0].unsqueeze(-1)  # why is pytorch so weird 
+
+        b = self.b.unsqueeze(0).unsqueeze(0)
 
         # fill in fourier encoding
-        sine_terms = torch.sin(self.raw_encode[0]*self.b*2*torch.pi)
-        cosine_terms = torch.cos(self.raw_encode[0]*self.b*2*torch.pi)
-        self.fourier_encode[::2, :] = sine_terms
-        self.fourier_encode[1::2, :] = cosine_terms
-        
-        # also need to do for premz
-        premz_sine = torch.sin(premz*self.b*2*torch.pi)
-        premz_cos = torch.cos(premz*self.b*2*torch.pi)
-        self.premz_encode[1::2, :] = premz_sine
-        self.premz_encode[2::2, :] = premz_cos
-        self.premz_encode[0, :] = premz
+        sine_terms = torch.sin(mzs*b*2*torch.pi)
+        cosine_terms = torch.cos(mzs*b*2*torch.pi)
 
-        # run each column through feedforward and append (i messed up the dimensions originally, oops)
-        encoded_fourier = self.ff_fourier(self.fourier_encode.T)
-        encoded_raw = self.ff_raw(self.raw_encode.T)
-        encoded_premz = self.ff_premz(self.premz_encode.T)
+        # initialize fourier array, fill, and run through feedforward
+        fourier_encode = torch.empty(mz.shape[0], mz.shape[1], 2*self.len_b, device=mz.device)
+        fourier_encode[:, :, ::2] = sine_terms
+        fourier_encode[:, :, 1::2] = cosine_terms
+        encoded_fourier = self.ff_fourier(fourier_encode)
         
         # append along correct axis
-        x = torch.cat((encoded_fourier, encoded_raw), dim=-1)
+        x = torch.cat([encoded_fourier, encoded_raw], dim=-1)
 
-        spectrum = x[1:].unsqueeze(0)
-        precursor = x[0].unsqueeze(0).unsqueeze(0)
+        spectrum = x[:, 1:, :]
+        precursor = x[:, 0, :].unsqueeze(1)
 
         return spectrum, precursor
 
