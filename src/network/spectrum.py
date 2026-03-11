@@ -76,7 +76,10 @@ class SpecEmbed(nn.Module):
         # append along correct axis
         x = torch.cat((encoded_fourier, encoded_raw), dim=-1)
 
-        return x, x[0]
+        spectrum = x[1:].unsqueeze(0)
+        precursor = x[0].unsqueeze(0).unsqueeze(0)
+
+        return spectrum, precursor
 
 
 # above architecture is more similar to literature, for testing for now
