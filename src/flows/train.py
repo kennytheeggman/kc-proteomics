@@ -9,22 +9,21 @@ def train(config, dataloader, model, loss_fn, optimizer, scheduler, loss_history
         optimizer.zero_grad()
         charge, premz, mz, i, peptide = batch
         prem = premz*charge
-        for idx in range(config.hyper.batch_size):
-            prem_cur = prem[idx]
-            prob_matrix, encoded, decoded = model(mz[idx].to(config.device), i[idx].to(config.device), premz[idx].to(config.device))
-            print("".join(reduce(decode_temporary(prob_matrix).to(config.cpu))), peptide[idx].decode())
-            # print("".join(reduce(decode(prob_matrix, config.aa_masses, prem_cur, config.tolerance, config.mass_res).to(config.cpu))), peptide[idx].decode())
-            loss = loss_fn(prob_matrix, encoded, decoded, peptide[idx].decode())
-            torch.autograd.set_detect_anomaly(True)
-            loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-            optimizer.step()
-            scheduler.step()
-            loss_value = loss.item()
-            print(f"Loss: {loss_value}")
+        
+        prob_matrix, encoded, decoded = model(mz.to(config.device), i.to(config.device), premz.to(config.device))
+        print("".join(reduce(decode_temporary(prob_matrix[0]).to(config.cpu))), peptide[0].decode())
+        # print("".join(reduce(decode(prob_matrix[0], config.aa_masses, prem[0], config.tolerance, config.mass_res).to(config.cpu))), peptide[0].decode())
+        loss = loss_fn(prob_matrix, encoded, decoded, peptide)  # !!!
+        torch.autograd.set_detect_anomaly(True)
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+        optimizer.step()
+        scheduler.step()
+        loss_value = loss.item()
+        print(f"Loss: {loss_value}")
 
-            # temporary visualizer, comment out if we dont need
-            update_plot(loss_history, loss_value)
+        # temporary visualizer, comment out if we dont need
+        update_plot(loss_history, loss_value)
 
         # # 3. Print gradients for all parameters
         # for name, param in model.named_parameters():
@@ -40,11 +39,10 @@ def evaluate(config, dataloader, model, loss_fn):
     with torch.no_grad():
         for idx, batch in enumerate(dataloader):
             charge, premz, mz, i, peptide = batch
-            for idx in range(config.hyper.batch_size):
-                prob_matrix, encoded, decoded = model(mz[0].to(config.device), i[0].to(config.device), premz[0].to(config.device))
-                loss = loss_fn(prob_matrix, encoded, decoded, peptide)
-                test_loss += loss.item()
-    test_loss /= len(dataloader) * config.hyper.batch_size
+            prob_matrix, encoded, decoded = model(mz.to(config.device), i.to(config.device), premz.to(config.device))
+            loss = loss_fn(prob_matrix, encoded, decoded, peptide)
+            test_loss += loss.item()
+    test_loss /= len(dataloader)
     print(f"Test loss: {test_loss}")
 
 def run(config, model, loss_fn, optimizer, scheduler, train_dataloader, eval_dataloader):

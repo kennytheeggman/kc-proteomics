@@ -68,13 +68,12 @@ def reduce(sequence: torch.Tensor, blank=0):
     last = None
     reduced = []
     for i in sequence:
-        token = int(i)
-        if token == blank:
+        if i == blank:
             last = blank
             continue
-        if token != last:
-            reduced.append(chr(token + ord('A') - 1))
-        last = token
+        if i != last:
+            reduced.append(chr(i + ord('A') - 1))
+        last = i
     return reduced
 
 def encode(sequence: str):
