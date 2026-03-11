@@ -41,6 +41,8 @@ def evaluate(config, dataloader, model, loss_fn):
             charge, premz, mz, i, peptide = batch
             prob_matrix, encoded, decoded = model(mz.to(config.device), i.to(config.device), premz.to(config.device))
             loss = loss_fn(prob_matrix, encoded, decoded, peptide)
+            if loss is None:
+                continue
             test_loss += loss.item()
     test_loss /= len(dataloader)
     print(f"Test loss: {test_loss}")
