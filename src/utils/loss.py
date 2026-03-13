@@ -5,7 +5,7 @@ import torch
 from .ctc import encode
 
 def get_loss(config):
-    ctc_loss = torch.nn.CTCLoss(blank=0)
+    ctc_loss = torch.nn.CTCLoss(blank=0, reduction="sum", zero_infinity=True)
     mse_loss = torch.nn.MSELoss()
 
     def loss(prob_matrix: torch.Tensor, embed: torch.Tensor, decoded: torch.Tensor, sequences):
