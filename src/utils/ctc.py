@@ -64,6 +64,35 @@ def decode_temporary(prob_matrix):
     return torch.argmax(prob_matrix, dim=1)
 
 
+ENCODE_MAP = {
+    'A': 0,
+    'C': 1,
+    'D': 2,
+    'E': 3,
+    'F': 4,
+    'G': 5,
+    'H': 6,
+    'I': 7,
+    'K': 8,
+    'L': 9,
+    'M': 10,
+    'm': 11,
+    'N': 12,
+    'P': 13,
+    'Q': 14,
+    'R': 15,
+    'S': 16,
+    'T': 17,
+    'V': 18,
+    'W': 19,
+    'Y': 20,
+}
+
+DECODE_MAP = [ 
+    'A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'm', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y'
+]
+
+
 def reduce(sequence: torch.Tensor, blank=0):
     last = None
     reduced = []
@@ -72,9 +101,9 @@ def reduce(sequence: torch.Tensor, blank=0):
             last = blank
             continue
         if i != last:
-            reduced.append(chr(i + ord('A') - 1))
+            reduced.append(DECODE_MAP[i])
         last = i
     return reduced
 
 def encode(sequence: str):
-    return torch.tensor([ord(i) - ord('A') + 1 for i in sequence], dtype=torch.int32)
+    return torch.tensor([ENCODE_MAP[i] for i in sequence], dtype=torch.int32)
