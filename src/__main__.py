@@ -37,5 +37,6 @@ if __name__ == "__main__":
 
     # optimizer = torch.optim.SGD(model.parameters(), lr=config.hyper.learning_rate)
     optimizer = torch.optim.Adam(model.parameters(), lr=config.hyper.learning_rate)  # claude says to try Adam
-    scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=config.hyper.max_learning_rate, steps_per_epoch=len(train_dataloader), epochs=config.hyper.epochs)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config.hyper.epochs * len(train_dataloader),  eta_min=1e-6)
+    # scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=config.hyper.max_learning_rate, steps_per_epoch=len(train_dataloader), epochs=config.hyper.epochs)
     run(config, model, loss_fn, optimizer, scheduler, train_dataloader, eval_dataloader)

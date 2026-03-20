@@ -46,7 +46,7 @@ class HyperConfig:
         self.mse_weight = 0.0
         self.batch_size = 32
         self.epochs = 10
-        self.learning_rate = 1e-4
+        self.learning_rate = 1e-5
         self.max_learning_rate = 1e-3
         self.checkpoint_name = "checkpoint.pth"
 
