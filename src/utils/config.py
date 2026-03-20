@@ -13,7 +13,7 @@ class SpectrumConfig:
     def __init__(self):
         self.m_min = 1e-4
         self.m_max = 1e3
-        self.num_peaks = 60  # this needs to be the same as below, need to reorganize everything later
+        self.num_peaks = 60
         self.num_features = 4096
 
         self.dm = 980
@@ -39,11 +39,11 @@ class SequenceConfig:
         self.linear_num_layers = 4
         self.encoder_num_layers = 4
         self.num_heads = 8
+        self.max_seq_len = 60
 
 class HyperConfig:
     def __init__(self):
-        self.ctc_weight = 1.0
-        self.mse_weight = 0.0
+        self.label_smoothing = 0.1
         self.batch_size = 32
         self.epochs = 10
         self.learning_rate = 1e-4
@@ -53,21 +53,20 @@ class HyperConfig:
 
 class Config:
     def __init__(self):
-        # Constants
         self.AA_TYPES = 22
+        self.SOS = 22
+        self.EOS = 23
+        self.PAD = 24
+        self.VOCAB_SIZE = 25
 
-        # decoding parameters
         self.aa_masses = torch.tensor([57.021464, 71.037114, 87.032028, 97.052764, 99.068414, 101.04767, 160.030649, 113.084064, 113.084064, 114.042927, 115.026943, 128.058578, 128.094963, 129.042593, 131.040485, 137.058912, 147.068414, 156.101111, 163.063329, 186.079313, 147.0354, 115.026943, 129.042594, 42.010565, 43.005814, 10000.0, 25.980265])
-        self.tolerance = 5  # 10E-5
-        self.mass_res = int(5)  # 10E6
+        self.tolerance = 5
+        self.mass_res = int(5)
 
-        # Torch Config
         self.cpu = "cpu"
         accelerator = torch.accelerator.current_accelerator()
         self.device = accelerator.type if accelerator and accelerator.type == "cuda" else "cpu"
-        # self.device = "cpu"
 
-        # Hyperparameters
         self.num_peaks = 60 
         self.data = DatasetConfig()
         self.spec = SpectrumConfig()
