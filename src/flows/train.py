@@ -1,10 +1,13 @@
 import torch
+from torch.utils.tensorboard import SummaryWriter
 
 from src.utils.ctc import decode, reduce, decode_temporary
 from src.utils.loss_visualizer import update_plot
 
-def train(config, dataloader, model, loss_fn, optimizer, scheduler, loss_history=None):  # fix decode imputs: verify masses
+def train(config, dataloader, model, loss_fn, optimizer, scheduler, writer, global_step, loss_history=None):  # fix decode imputs: verify masses
     model.train()
+    moving_avg = None
+    weight = 0.1
     for idx, batch in enumerate(dataloader):
         optimizer.zero_grad()
         charge, premz, mz, i, peptide = batch
@@ -25,6 +28,19 @@ def train(config, dataloader, model, loss_fn, optimizer, scheduler, loss_history
         # temporary visualizer, comment out if we dont need
         update_plot(loss_history, loss_value)
 
+        # logging loss, learning rate, moving avg
+        if moving_avg is None:
+            moving_avg = loss_value
+        else:
+            moving_avg = loss_value * weight + (1 - weight) * moving_avg
+
+        writer.add_scalar("Loss/train", loss.item(), global_step)
+        writer.add_scalar("Learning Rate", scheduler.get_last_lr()[0], global_step)
+        writer.add_scalar("Moving Average Loss", moving_avg, global_step)
+        global_step += 1
+
+    return global_step
+
         # # 3. Print gradients for all parameters
         # for name, param in model.named_parameters():
         #     if param.grad is not None:
@@ -33,7 +49,7 @@ def train(config, dataloader, model, loss_fn, optimizer, scheduler, loss_history
         #     else:
         #         print(f"No gradient for {name}")
 
-def evaluate(config, dataloader, model, loss_fn):
+def evaluate(config, dataloader, model, loss_fn, writer, epoch):
     model.eval()
     test_loss = 0
     with torch.no_grad():
@@ -49,8 +65,11 @@ def evaluate(config, dataloader, model, loss_fn):
 
 def run(config, model, loss_fn, optimizer, scheduler, train_dataloader, eval_dataloader):
     loss_history = []
+    writer = SummaryWriter(log_dir="runs/run1")
+    global_step = 0
     for epoch in range(config.hyper.epochs):
         print(f"Epoch: {epoch}")
-        train(config, train_dataloader, model, loss_fn, optimizer, scheduler, loss_history)
-        evaluate(config, eval_dataloader, model, loss_fn)
+        global_step = train(config, train_dataloader, model, loss_fn, optimizer, scheduler, writer, global_step, loss_history)
+        evaluate(config, eval_dataloader, model, loss_fn, writer, epoch)
         torch.save(model.state_dict(), f"{config.hyper.checkpoint_name}")
+    writer.close()
