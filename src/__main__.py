@@ -9,7 +9,7 @@ from src.utils.ctc import encode, reduce
 from .network.network import Model
 from .utils.loss import get_loss 
 
-from .data.data import EvalDataset, TrainingDataset, collate_fn
+from .data.data import EvalDataset, TrainingDataset, autoregressive_collate_fn
 from .utils.config import Config
 
 
@@ -25,6 +25,12 @@ def args():
     return Config() 
 
 
+def get_collate_fn(config):
+    def collate(batch):
+        return autoregressive_collate_fn(batch, config)
+    return collate
+
+
 if __name__ == "__main__":
     config = args()
     dataset = TrainingDataset(config)
@@ -32,10 +38,24 @@ if __name__ == "__main__":
     model.to(config.device)
     loss_fn = get_loss(config)
 
-    train_dataloader = DataLoader(dataset, batch_size=config.hyper.batch_size, shuffle=True, collate_fn=collate_fn)
-    eval_dataloader = DataLoader(EvalDataset(config), batch_size=config.hyper.batch_size, shuffle=False, collate_fn=collate_fn)
+    train_dataloader = DataLoader(
+        dataset,
+        batch_size=config.hyper.batch_size,
+        shuffle=True,
+        collate_fn=get_collate_fn(config)
+    )
+    eval_dataloader = DataLoader(
+        EvalDataset(config),
+        batch_size=config.hyper.batch_size,
+        shuffle=False,
+        collate_fn=get_collate_fn(config)
+    )
 
-    # optimizer = torch.optim.SGD(model.parameters(), lr=config.hyper.learning_rate)
-    optimizer = torch.optim.Adam(model.parameters(), lr=config.hyper.learning_rate)  # claude says to try Adam
-    scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=config.hyper.max_learning_rate, steps_per_epoch=len(train_dataloader), epochs=config.hyper.epochs)
+    optimizer = torch.optim.Adam(model.parameters(), lr=config.hyper.learning_rate)
+    scheduler = torch.optim.lr_scheduler.OneCycleLR(
+        optimizer,
+        max_lr=config.hyper.max_learning_rate,
+        steps_per_epoch=len(train_dataloader),
+        epochs=config.hyper.epochs
+    )
     run(config, model, loss_fn, optimizer, scheduler, train_dataloader, eval_dataloader)
