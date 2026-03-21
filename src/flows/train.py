@@ -1,56 +1,22 @@
+
+
 import torch
+from torch.utils.data import DataLoader
 
-from src.utils.ctc import decode, reduce, decode_temporary
-from src.utils.loss_visualizer import update_plot
+from src.data.data import Peptide
+from src.network.network import Model, decode, encode
+from src.utils.config import Config
 
-def train(config, dataloader, model, loss_fn, optimizer, scheduler, loss_history=None):  # fix decode imputs: verify masses
-    model.train()
-    for idx, batch in enumerate(dataloader):
-        optimizer.zero_grad()
-        charge, premz, mz, i, peptide = batch
-        prem = premz*charge
-        
-        prob_matrix, encoded, decoded = model(mz.to(config.device), i.to(config.device), premz.to(config.device))
-        print("".join(reduce(decode_temporary(prob_matrix[0]).to(config.cpu))), peptide[0].decode())
-        # print("".join(reduce(decode(prob_matrix[0], config.aa_masses, prem[0], config.tolerance, config.mass_res).to(config.cpu))), peptide[0].decode())
-        loss = loss_fn(prob_matrix, encoded, decoded, peptide)  # !!!
-        torch.autograd.set_detect_anomaly(True)
-        loss.backward()
-        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-        optimizer.step()
-        scheduler.step()
-        loss_value = loss.item()
-        print(f"Loss: {loss_value}")
 
-        # temporary visualizer, comment out if we dont need
-        update_plot(loss_history, loss_value)
-
-        # # 3. Print gradients for all parameters
-        # for name, param in model.named_parameters():
-        #     if param.grad is not None:
-        #         print(f"Gradient for {name}: {param.grad.norm()}") # Using norm for cleaner output
-        #         # print(param.grad) # Print raw tensor
-        #     else:
-        #         print(f"No gradient for {name}")
-
-def evaluate(config, dataloader, model, loss_fn):
-    model.eval()
-    test_loss = 0
-    with torch.no_grad():
-        for idx, batch in enumerate(dataloader):
-            charge, premz, mz, i, peptide = batch
-            prob_matrix, encoded, decoded = model(mz.to(config.device), i.to(config.device), premz.to(config.device))
-            loss = loss_fn(prob_matrix, encoded, decoded, peptide)
-            if loss is None:
-                continue
-            test_loss += loss.item()
-    test_loss /= len(dataloader)
-    print(f"Test loss: {test_loss}")
-
-def run(config, model, loss_fn, optimizer, scheduler, train_dataloader, eval_dataloader):
-    loss_history = []
-    for epoch in range(config.hyper.epochs):
-        print(f"Epoch: {epoch}")
-        train(config, train_dataloader, model, loss_fn, optimizer, scheduler, loss_history)
-        evaluate(config, eval_dataloader, model, loss_fn)
-        torch.save(model.state_dict(), f"{config.hyper.checkpoint_name}")
+def run(config: Config, model: Model, loss_fn, optimizer, scheduler, train_dataloader: DataLoader[Peptide], eval_dataloader: DataLoader[Peptide]):
+    # for epoch in range(config.hyper.epochs):
+        for idx, batch in enumerate(train_dataloader):
+            mass, mz, i, peptide = batch
+            optimizer.zero_grad()
+            logits = model.forward((mz, i), peptide)
+            loss: torch.Tensor = loss_fn(logits, peptide)
+            loss.backward()
+            optimizer.step()
+            print(f"Step {idx} loss: {loss.item()} pred: {decode(logits, config)[0]}, target: {peptide[0]}")
+            # scheduler.step()
+        # print(f"Epoch {epoch} loss: {loss.item()}")

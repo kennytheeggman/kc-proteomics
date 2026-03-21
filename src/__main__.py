@@ -1,13 +1,10 @@
 import argparse
-
 import torch
 from torch.utils.data import DataLoader
 
 from src.flows.train import run
-from src.utils.ctc import encode, reduce
-
-from .network.network import Model
-from .utils.loss import get_loss 
+from src.network.network import Model
+from src.utils.loss import get_loss
 
 from .data.data import EvalDataset, TrainingDataset, collate_fn
 from .utils.config import Config
@@ -19,9 +16,6 @@ PROG_DESC = 'Training and inference and fine-tuning for semi-supervised proteomi
 
 def args():
     parser = argparse.ArgumentParser(prog=PROG_NAME, description=PROG_DESC)
-    parser.add_argument('--train', default='../datasets/IVE_v2_train.h5')
-    parser.add_argument('--eval', default='../datasets/IVE_v2_val.h5')
-    args = parser.parse_args()
     return Config() 
 
 
@@ -29,13 +23,9 @@ if __name__ == "__main__":
     config = args()
     dataset = TrainingDataset(config)
     model = Model(config)
-    model.to(config.device)
     loss_fn = get_loss(config)
-
+    optimizer = torch.optim.Adam(model.parameters(), lr=config.hyper.learning_rate)
     train_dataloader = DataLoader(dataset, batch_size=config.hyper.batch_size, shuffle=True, collate_fn=collate_fn)
     eval_dataloader = DataLoader(EvalDataset(config), batch_size=config.hyper.batch_size, shuffle=False, collate_fn=collate_fn)
+    run(config, model, loss_fn, optimizer, None, train_dataloader, eval_dataloader)
 
-    # optimizer = torch.optim.SGD(model.parameters(), lr=config.hyper.learning_rate)
-    optimizer = torch.optim.Adam(model.parameters(), lr=config.hyper.learning_rate)  # claude says to try Adam
-    scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=config.hyper.max_learning_rate, steps_per_epoch=len(train_dataloader), epochs=config.hyper.epochs)
-    run(config, model, loss_fn, optimizer, scheduler, train_dataloader, eval_dataloader)
