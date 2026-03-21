@@ -1,10 +1,10 @@
-import torch
 from torch import nn
+import torch
 
 class FeedForward(nn.Module):  # no layer normalization, but should be fine
 
     # hidden_dims is [size of hidden layer 1, size of hidden layer 2, etc]
-    def __init__(self, input_dim, output_dim, hidden_dims, normalizer=nn.ReLU, bias=True, dropout=0):
+    def __init__(self, input_dim, output_dim, hidden_dims, normalizer=nn.ReLU, bias=True, dropout=0.0):
         super().__init__()
         linear_stack = nn.ModuleList([])
         if len(hidden_dims) == 0:
@@ -22,5 +22,5 @@ class FeedForward(nn.Module):  # no layer normalization, but should be fine
             linear_stack.append(nn.Linear(hidden_dims[-1], output_dim, bias=bias))
         self.linear_stack = nn.Sequential(*linear_stack)
     
-    def forward(self, x):
-        return self.linear_stack(x)
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.linear_stack.forward(x)

@@ -1,44 +1,70 @@
-# latent space to sequence and sequence to latent space (optional) modules
 
 
-from math import ceil
 from torch import nn
 import torch
-from ..utils.config import Config
-from ..network.linear import FeedForward
 
-class EmbedSequence(nn.Module):
+from src.network.linear import FeedForward
+from src.utils.config import Config
+
+
+class SequenceEncoder(nn.Module):
     def __init__(self, config: Config):
         super().__init__()
-        self.d_model = config.embed.d_model
-        self.d_output = config.AA_TYPES
-        self.num_heads = config.seq.num_heads
-        self.linear_layers = config.seq.linear_num_layers
-        self.encoder_layers = config.seq.encoder_num_layers
-
-        self.embedding_stack = nn.TransformerEncoder(
-            nn.TransformerEncoderLayer(config.embed.d_model, self.num_heads, batch_first=True),
-            self.encoder_layers
+        self.config = config
+        self.encoder = nn.TransformerEncoder(
+            nn.TransformerEncoderLayer(
+                config.hyper.d_model, 
+                config.seq.num_heads, 
+                dim_feedforward=config.hyper.d_model,
+                batch_first=True
+            ),
+            num_layers=config.seq.encoder_num_layers
+        )
+        self.ff1 = FeedForward(
+            input_dim=1, 
+            output_dim=config.hyper.d_model, 
+            hidden_dims=[config.spec.dm+config.spec.dp]*5,
+            bias=True
+        )
+        self.ff2 = FeedForward(
+            input_dim=config.hyper.d_model, 
+            output_dim=config.hyper.d_model, 
+            hidden_dims=[config.spec.dm+config.spec.dp]*5, 
+            bias=True
         )
 
-        # original, without relu
-        # linear_layers = [
-        #     nn.Linear(
-        #         ceil((self.d_output - self.d_model) * (i / self.linear_layers) + self.d_model), 
-        #         ceil((self.d_output - self.d_model) * ((i + 1) / self.linear_layers) + self.d_model)
-        #     ) for i in range(self.linear_layers)
-        # ]
-        # self.vector_stack = nn.Sequential(*linear_layers)
+    def forward(self, data: tuple[torch.Tensor, torch.Tensor]):
+        sequence, mask = data
+        sequence = self.ff1.forward(sequence.unsqueeze(2))
+        x = self.encoder.forward(sequence, src_key_padding_mask=mask)
+        x = self.ff2.forward(x)
+        return x
 
-        # adding relu to original
-        # hidden_dims = [ceil((self.d_output - self.d_model) * (i / self.linear_layers) + self.d_model) for i in range(1, self.linear_layers)]
-        
-        # final working version
-        hidden_dims = [self.d_model*4, self.d_model*4]  # better than [self.d_model*4, self.d_model], the transformer version
-        self.vector_stack = FeedForward(input_dim=self.d_model, output_dim=self.d_output, hidden_dims=hidden_dims)
 
-    def forward(self, embedding):
-        raw_values = self.embedding_stack(embedding)
-        raw_matrix = self.vector_stack(raw_values)
-        prob_matrix = torch.log_softmax(raw_matrix, dim=-1)
-        return prob_matrix
+class SequenceDecoder(nn.Module):
+    def __init__(self, config: Config):
+        super().__init__()
+        self.config = config
+        self.decoder = nn.TransformerDecoder(
+            nn.TransformerDecoderLayer(
+                config.hyper.d_model, 
+                config.seq.num_heads, 
+                dim_feedforward=config.hyper.d_model,
+                batch_first=True
+            ),
+            num_layers=config.seq.decoder_num_layers
+        )
+        self.ff = FeedForward(
+            input_dim=config.hyper.d_model, 
+            output_dim=config.AA_TYPES + 3, 
+            hidden_dims=[], 
+            bias=True
+        )
+
+    def forward(self, data: tuple[torch.Tensor, torch.Tensor], embedding: torch.Tensor):
+        mask = torch.triu(torch.ones(self.config.hyper.max_length, self.config.hyper.max_length), diagonal=1)
+        mask = mask.masked_fill(mask == 1, float('-inf'))
+        sequence, padding_mask = data
+        x = self.decoder.forward(sequence, embedding, tgt_mask=mask, tgt_key_padding_mask=padding_mask)
+        x = self.ff.forward(x)
+        return x
