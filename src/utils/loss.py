@@ -1,4 +1,5 @@
 import torch
+import torch.nn as nn
 
 from src.network.network import encode
 from src.utils.config import Config
