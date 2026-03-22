@@ -27,5 +27,5 @@ if __name__ == "__main__":
     optimizer = torch.optim.Adam(model.parameters(), lr=config.hyper.learning_rate)
     train_dataloader = DataLoader(dataset, batch_size=config.hyper.batch_size, shuffle=True, collate_fn=collate_fn)
     eval_dataloader = DataLoader(EvalDataset(config), batch_size=config.hyper.batch_size, shuffle=False, collate_fn=collate_fn)
-    run(config, model, loss_fn, optimizer, None, train_dataloader, eval_dataloader)
+    run(config, model.to("cuda"), loss_fn, optimizer, None, train_dataloader, eval_dataloader)
 

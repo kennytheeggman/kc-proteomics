@@ -3,8 +3,8 @@ import torch
 
 class DatasetConfig:
     def __init__(self):
-        self.training = "../datasets/IVE_v2_train.h5"
-        self.eval = "../datasets/IVE_v2_val.h5"
+        self.training = "../../datasets/IVE_v2/IVE_v2_train.h5"
+        self.eval = "../../datasets/IVE_v2/IVE_v2_val.h5"
         self.masking_prob = 0.1
         self.sigma = 0.01
 
@@ -25,14 +25,14 @@ class SpectrumConfig:
 
 class LatentConfig:
     def __init__(self):
-        self.encoder_num_layers = 4
+        self.encoder_num_layers = 8
         self.num_heads = 8
 
 class SequenceConfig:
     def __init__(self):
         self.linear_num_layers = 4
-        self.encoder_num_layers = 4
-        self.decoder_num_layers = 4
+        self.encoder_num_layers = 8
+        self.decoder_num_layers = 8
         self.num_heads = 8
 
 class HyperConfig:
@@ -40,10 +40,10 @@ class HyperConfig:
         self.ctc_weight = 1.0
         self.mse_weight = 0.0
         self.max_length = 60
-        self.d_model = 288
-        self.batch_size = 32
+        self.d_model = 256
+        self.batch_size = 64
         self.epochs = 10
-        self.learning_rate = 1e-2
+        self.learning_rate = 3e-5
         self.max_learning_rate = 1e-3
         self.checkpoint_name = "checkpoint.pth"
 
