@@ -1,25 +1,18 @@
 import torch
 import torch.nn as nn
 
-from .ctc import encode
+from src.network.network import encode
+from src.utils.config import Config
 
-
-def get_loss(config):
-    ce_loss = nn.CrossEntropyLoss(
-        ignore_index=config.PAD,
-        label_smoothing=config.hyper.label_smoothing
-    )
-    mse_loss = nn.MSELoss()
-
-    def loss(logits: torch.Tensor, embed: torch.Tensor, decoded: torch.Tensor, tgt: torch.Tensor, tgt_padding_mask: torch.Tensor):
-        batch_size, seq_len, vocab_size = logits.shape
-        
-        logits_flat = logits.view(-1, vocab_size)
-        tgt_flat = tgt.view(-1)
-        
-        loss_ce = ce_loss(logits_flat, tgt_flat)
-        loss_mse = mse_loss(embed, decoded)
-
-        return loss_ce # + loss_mse * config.hyper.mse_weight
-
-    return loss
+def get_loss(config: Config):
+    ce_loss = torch.nn.CrossEntropyLoss(label_smoothing=0.1)
+    # ce_loss = torch.nn.CrossEntropyLoss(ignore_index=config.PAD_TOKEN, label_smoothing=0.1, weight=torch.tensor([1.0]*21+[1.0]*3).to(config.device))
+    def loss_fn(logits: torch.Tensor, targets: list[str]):
+        tgt, _ = encode(targets, config)
+        padding = torch.tensor([config.PAD_TOKEN]).unsqueeze(1).repeat(config.hyper.batch_size, 1)
+        tgt = torch.cat([tgt[:, 1:], padding], dim=1)
+        logits = logits.permute(0, 2, 1).to(config.device)
+        tgt = tgt.type(dtype=torch.long).to(config.device)
+        # print(logits.shape, tgt.shape)
+        return ce_loss.forward(logits, tgt)
+    return loss_fn
