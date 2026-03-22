@@ -84,6 +84,6 @@ class SequenceDecoder(nn.Module):
         mask = torch.triu(torch.ones(self.config.hyper.max_length, self.config.hyper.max_length), diagonal=1)
         mask = mask.masked_fill(mask == 1, float('-inf'))
         sequence, padding_mask = data
-        x = self.decoder.forward(sequence, embedding, tgt_mask=mask.to("cuda"), tgt_key_padding_mask=padding_mask)
+        x = self.decoder.forward(sequence, embedding, tgt_mask=mask.to(self.config.device), tgt_key_padding_mask=padding_mask)
         x = self.ff.forward(x)
         return x

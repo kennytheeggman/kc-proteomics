@@ -23,8 +23,8 @@ class Model(nn.Module):
         spec, prec = self.encode_spectrum.forward(spectrum)
         embedding = self.encode_embedding.forward(spec, prec)
         encoded, mask = encode(sequence, self.config)
-        target = self.encode_sequence.forward((encoded.to("cuda"), mask.to("cuda")))
-        logits = self.decode_sequence.forward((target, mask.to("cuda")), embedding)
+        target = self.encode_sequence.forward((encoded.to(self.config.device), mask.to(self.config.device)))
+        logits = self.decode_sequence.forward((target, mask.to(self.config.device)), embedding)
         # return logits
         return nn.functional.log_softmax(logits, dim=2)
 
