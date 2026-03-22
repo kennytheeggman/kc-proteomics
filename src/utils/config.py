@@ -34,6 +34,7 @@ class SequenceConfig:
         self.encoder_num_layers = 8
         self.decoder_num_layers = 8
         self.num_heads = 8
+        self.max_seq_len = 60
 
 class HyperConfig:
     def __init__(self):
@@ -56,16 +57,13 @@ class Config:
         self.EOS_TOKEN = 22
         self.PAD_TOKEN = 23
 
-        # decoding parameters
         self.aa_masses = torch.tensor([57.021464, 71.037114, 87.032028, 97.052764, 99.068414, 101.04767, 160.030649, 113.084064, 113.084064, 114.042927, 115.026943, 128.058578, 128.094963, 129.042593, 131.040485, 137.058912, 147.068414, 156.101111, 163.063329, 186.079313, 147.0354, 115.026943, 129.042594, 42.010565, 43.005814, 10000.0, 25.980265])
-        self.tolerance = 5  # 10E-5
-        self.mass_res = int(5)  # 10E6
+        self.tolerance = 5
+        self.mass_res = int(5)
 
-        # Torch Config
         self.cpu = "cpu"
         accelerator = torch.accelerator.current_accelerator()
         self.device = accelerator.type if accelerator and accelerator.type == "cuda" else "cpu"
-        # self.device = "cpu"
 
         # Hyperparameters
         self.data = DatasetConfig()
