@@ -3,8 +3,8 @@ import torch
 
 class DatasetConfig:
     def __init__(self):
-        self.training = "../../datasets/IVE_v2/IVE_v2_train.h5"
-        self.eval = "../../datasets/IVE_v2/IVE_v2_val.h5"
+        self.training = "../datasets/IVE_v2_train.h5"
+        self.eval = "../datasets/IVE_v2_val.h5"
         self.masking_prob = 0.1
         self.sigma = 0.01
 
@@ -63,7 +63,7 @@ class Config:
 
         self.cpu = "cpu"
         accelerator = torch.accelerator.current_accelerator()
-        self.device = accelerator.type if accelerator and accelerator.type == "cuda" else "cpu"
+        self.device = accelerator.type if accelerator else "cpu"
 
         # Hyperparameters
         self.data = DatasetConfig()

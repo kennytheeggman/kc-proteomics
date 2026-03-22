@@ -19,7 +19,7 @@ def run(config: Config, model: Model, loss_fn, optimizer, scheduler, train_datal
     for idx, batch in enumerate(train_dataloader):
         mass, mz, i, peptide = batch
         optimizer.zero_grad()
-        logits = model.forward((mz.to("cuda"), i.to("cuda")), peptide)
+        logits = model.forward((mz.to(config.device), i.to(config.device)), peptide)
         loss: torch.Tensor = loss_fn(logits, peptide)
         loss.backward()
         clip_grad_norm_(model.parameters(), max_norm=1.0)
