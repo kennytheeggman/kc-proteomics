@@ -35,8 +35,8 @@ class SpectrumEmbed(nn.Module):
 
         # intialize arrays, apparently they have to be these register buffer things?
         self.register_buffer('premz_encode', torch.empty((2*len_b + 1, 1)))  # first element will be the raw encoding
-        self.b = torch.cat((torch.arange(m_max, 0, -1), m_min*torch.arange(k, 0, -1)))
-        # self.register_buffer('b', self.b)
+        b = torch.cat((torch.arange(m_max, 0, -1), m_min*torch.arange(k, 0, -1)))
+        self.register_buffer('b', b)
 
         # set up feed forward networks
         self.ff_fourier = FeedForward(input_dim=2*len_b, output_dim=dm, hidden_dims=hidden_fourier, dropout=dropout_fourier)
