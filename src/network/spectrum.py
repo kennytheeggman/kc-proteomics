@@ -1,18 +1,17 @@
 # spectrum to vector and vector to spectrum modules
 # !!! ignore all premz code i misunderstood data oops, it's also incomplete
 
-from math import ceil
 from ..utils.config import Config
 import torch.nn as nn
 import torch
 from ..network.linear import FeedForward
 
-class SpecEmbed(nn.Module):
+class SpectrumEmbed(nn.Module):
     def __init__(self, config: Config):
         super().__init__()
 
         # initialize variables for fourier embedding
-        num_peaks = config.spec.num_peaks
+        num_peaks = config.hyper.max_length
         m_min = config.spec.m_min
         m_max = config.spec.m_max
         k = int(1/m_min)
@@ -45,10 +44,10 @@ class SpecEmbed(nn.Module):
         self.ff_premz = FeedForward(input_dim = 2*len_b+1, output_dim = self.sz, hidden_dims=hidden_premz, dropout=dropout_premz)
 
 
-    def forward(self, mz:torch.Tensor, i:torch.Tensor, premz):
+    def forward(self, spectrum: tuple[torch.Tensor, torch.Tensor]):
 
         # note: mz would be [batch, num_peaks, 1]
-
+        mz, i = spectrum
         # fill in raw encoding and pass through feedforward
         raw_encode = torch.stack([mz, i], dim=-1)  # [batch, num_peaks, 2]
         encoded_raw = self.ff_raw(raw_encode)  # [batch, num_peaks, dp]
@@ -69,34 +68,4 @@ class SpecEmbed(nn.Module):
         # append along correct axis
         x = torch.cat([encoded_fourier, encoded_raw], dim=-1)
 
-        spectrum = x[:, 1:, :]
-        precursor = x[:, 0, :].unsqueeze(1)
-
-        return spectrum, precursor
-
-
-# above architecture is more similar to literature, for testing for now
-# below is kenny's code
-
-# class SpecEmbed(nn.Module):
-#     def __init__(self, config: Config):
-#         super().__init__()
-#         num_features = config.spec.num_features // 4
-#         m_min = config.spec.m_min
-#         m_max = config.spec.m_max
-
-#         lows = num_features // 2
-#         highs = num_features - lows - 1
-
-#         b = torch.tensor(
-#             [(1 / (i * ceil(m_max / lows))) for i in range(lows, 0, -1)] + [1] +
-#             [(i * ceil(1 / m_min / highs)) for i in range(1, highs + 1, 1)]
-#         )
-#         self.b = b.unsqueeze(0)
-#         self.b = nn.Parameter(self.b, requires_grad=False)
-#         self.register_parameter("b", self.b)
-
-#     def forward(self, mz: torch.Tensor, i: torch.Tensor):
-#         mz = 2 * torch.pi * mz.unsqueeze(0).T @ self.b
-#         i = 2 * torch.pi * i.unsqueeze(0).T @ self.b
-#         return torch.cat([torch.sin(mz), torch.cos(mz), torch.sin(i), torch.cos(i)], dim=-1)
+        return x[:, 1:, :], x[:, 0, :].unsqueeze(1)
