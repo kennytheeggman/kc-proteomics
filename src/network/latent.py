@@ -20,6 +20,6 @@ class LatentEncoder(nn.Module):
     def forward(self, spectrum, precursor):
         spectrum = self.ff1.forward(spectrum)
         precursor = self.ff1.forward(precursor)
-        x = self.encoder.forward(spectrum, precursor.repeat(1, self.config.hyper.max_length, 1))
+        x = self.encoder.forward(spectrum, precursor.repeat(1, self.config.hyper.max_length, 1))  # why need to repeat?
         x = self.ff2.forward(x)
         return x

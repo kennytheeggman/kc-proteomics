@@ -11,6 +11,7 @@ from src.utils.config import Config
 
 
 def run(config: Config, model: Model, loss_fn, optimizer, scheduler, train_dataloader: DataLoader[Peptide], eval_dataloader: DataLoader[Peptide]):
+    model.train()
     # for epoch in range(config.hyper.epochs):
     writer = SummaryWriter(log_dir="runs/run1")
     global_step = 0
@@ -28,6 +29,7 @@ def run(config: Config, model: Model, loss_fn, optimizer, scheduler, train_datal
         if idx % 1000 == 0:
             torch.save(model.state_dict(), config.hyper.checkpoint_name)
         # scheduler.step()
+            
         if moving_avg is None:
             moving_avg = loss.item()
         else:
