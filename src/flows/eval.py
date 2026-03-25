@@ -32,15 +32,19 @@ def eval(config: Config, model: Model, train_dataloader: DataLoader[Peptide], ev
             for i in range(config.hyper.max_length):
                 
                 masks = torch.tensor([True] * (i+1) + [False] * (config.hyper.max_length - (i+1)))
-                masks = masks.unsqueeze(0).repeat(batch_sz, 1)
+                masks = masks.unsqueeze(0).repeat(batch_sz, 1)[incomplete, :]
 
                 peptide_seq = model.encode_sequence.forward((seqs[incomplete, :].to(model.config.device), masks.to(model.config.device)))
                 logits = model.decode_sequence.forward((peptide_seq, masks.to(model.config.device)), embedding)
 
-                seqs[incomplete, (i+1)] = softmax()
+                seqs[incomplete, (i+1)] = 67  # NBMVM THIS IS WRONG wtf how do i even do this
 
                 # put the highest value logit into the next seqs
                 # check if any seqs are complete
+
+                # i am confused
+                # false true flipped?
+                # why is ignore token commented out :(
     
     p_correct_seqs = (correct_peptides/total_peptides) * 100
     p_correct_aas = (correct_aas/total_aas) * 100
