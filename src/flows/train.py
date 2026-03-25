@@ -8,6 +8,7 @@ from torch.utils.tensorboard import SummaryWriter
 from src.data.data import Peptide
 from src.network.network import Model, decode, encode
 from src.utils.config import Config
+from src.flows.eval import eval
 
 
 def run(config: Config, model: Model, loss_fn, optimizer, scheduler, train_dataloader: DataLoader[Peptide], eval_dataloader: DataLoader[Peptide]):
@@ -28,6 +29,9 @@ def run(config: Config, model: Model, loss_fn, optimizer, scheduler, train_datal
         print(f"Step {idx} loss: {loss.item()} pred: {decode(logits, config)[0]}, target: {peptide[0]}")
         if idx % 1000 == 0:
             torch.save(model.state_dict(), config.hyper.checkpoint_name)
+        if idx % 10 == 0:
+            p_correct_seqs, p_correct_tokens = eval(config, model, train_dataloader, eval_dataloader, global_step, idx, batch)
+            print(f"step {global_step}: {p_correct_seqs:.1f}% correct seqs, {p_correct_tokens:.1f}% correct tokens")
         # scheduler.step()
             
         if moving_avg is None:

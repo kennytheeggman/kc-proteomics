@@ -8,7 +8,7 @@ from src.data.data import Peptide
 from src.network.network import Model, decode, encode
 from src.utils.config import Config
 
-def eval(config: Config, model: Model, train_dataloader: DataLoader[Peptide], eval_dataloader: DataLoader[Peptide], global_step):
+def eval(config: Config, model: Model, train_dataloader: DataLoader[Peptide], eval_dataloader: DataLoader[Peptide], global_step, idx, batch):
     model.eval()
     writer = SummaryWriter(log_dir="runs/eval1")
     total_sequences = 0
@@ -17,11 +17,11 @@ def eval(config: Config, model: Model, train_dataloader: DataLoader[Peptide], ev
     correct_tokens = 0
 
     with torch.no_grad():
-        for idx, batch in enumerate(eval_dataloader):
-            mass, mz, i, peptide = batch
-            batch_sz = config.hyper.batch_size
+        # for idx, batch in enumerate(eval_dataloader):
+            mass, mz, intensity, peptide = batch
+            batch_sz = len(peptide)
 
-            spec, prec = model.encode_spectrum.forward((mz.to(config.device), i.to(config.device)))
+            spec, prec = model.encode_spectrum.forward((mz.to(config.device), intensity.to(config.device)))
             embedding = model.encode_embedding.forward(spec, prec)
 
             # init shape [batch size, max seq len]
@@ -30,7 +30,7 @@ def eval(config: Config, model: Model, train_dataloader: DataLoader[Peptide], ev
 
             incomplete = torch.full((batch_sz,), True, dtype=torch.bool)  # true for not done, false for done
 
-            for i in range(config.hyper.max_length):
+            for i in range(config.hyper.max_length-1):
 
                 if not incomplete.any():
                     break
@@ -38,23 +38,31 @@ def eval(config: Config, model: Model, train_dataloader: DataLoader[Peptide], ev
                 masks = torch.tensor([False] * (i+1) + [True] * (config.hyper.max_length - (i+1)))
                 masks = masks.unsqueeze(0).repeat(batch_sz, 1)[incomplete, :]
 
-                peptide_seq = model.encode_sequence.forward((seqs[incomplete, :].to(model.config.device), masks.to(model.config.device)))
-                logits = model.decode_sequence.forward((peptide_seq, masks.to(model.config.device)), embedding)
+                peptide_seq = model.encode_sequence.forward((seqs[incomplete, :].float().to(model.config.device), masks.to(model.config.device)))
+                logits = model.decode_sequence.forward((peptide_seq, masks.to(model.config.device)), embedding[incomplete])
 
-                seqs[incomplete, (i+1)] = torch.argmax()  # just need the logit
+                next = torch.argmax(logits[:, i, :], dim=-1).cpu()
+                seqs[incomplete, (i+1)] = next  # just need the logit
 
-                # put the highest value logit into the next seqs
-                # check if any seqs are complete
+                complete_i = (next != config.EOS_TOKEN)
+                incomplete[incomplete.clone()] = complete_i
 
-                # why is ignore token commented out :( -- for training :(
-    
-            tgt_seqs = encode_seqs(peptide)
-            result_matrix = seqs - tgt_seqs
+                # look at ignore training token !! reminder (unrelated to this file)
 
-            # all the ones that r 0 r correct? then do row by row check
+            tgt_seqs = encode_seqs(peptide, config)
+            scores = seqs - tgt_seqs
 
-            total_tokens = result_matrix.shape[0] * result_matrix.shape[1]
-            total_sequences = result_matrix.shape[0]
+            non_pad = ~((seqs == config.PAD_TOKEN) & (tgt_seqs == config.PAD_TOKEN))  # if we want to not count pad tokens
+
+            results_tokens = (scores == 0) & non_pad
+            score_per_seq = torch.sum(results_tokens, dim=1)
+            correct_tokens += torch.sum(score_per_seq)
+
+            results_sequences = (score_per_seq == config.hyper.max_length)
+            correct_sequences += torch.sum(results_sequences)
+
+            total_tokens += torch.sum(non_pad)
+            total_sequences += scores.shape[0]
             
             p_correct_seqs = (correct_sequences/total_sequences) * 100
             p_correct_tokens = (correct_tokens/total_tokens) * 100
@@ -71,7 +79,7 @@ def encode_seqs(sequence: list[str], config: Config):
     ENCODE_MAP = {
         'A': 0, 'C': 1, 'D': 2, 'E': 3, 'F': 4, 'G': 5, 'H': 6, 'I': 7, 'K': 8, 'L': 9, 'M': 10, 'm': 11, 'N': 12, 'P': 13, 'Q': 14, 'R': 15, 'S': 16, 'T': 17, 'V': 18, 'W': 19, 'Y': 20
     }
-    result: torch.Tensor = torch.empty(0, config.hyper.max_length)
+    result: torch.Tensor = torch.empty(0, config.hyper.max_length, dtype=torch.long)
     for seq in sequence:
         encoded = torch.tensor([config.SOS_TOKEN] + [ENCODE_MAP[aa] for aa in seq] + [config.EOS_TOKEN])
         if (len(encoded) > config.hyper.max_length):
