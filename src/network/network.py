@@ -41,7 +41,7 @@ def encode(sequence: list[str], config: Config):
             encoded[-1] = config.EOS_TOKEN
         elif (len(encoded) < config.hyper.max_length):
             encoded = nn.functional.pad(encoded, (0, config.hyper.max_length - len(encoded)), value=config.PAD_TOKEN)
-        emask = torch.tensor([True] * len(encoded) + [False] * (config.hyper.max_length - len(encoded)))
+        emask = torch.tensor([False] * len(encoded) + [True] * (config.hyper.max_length - len(encoded)))
         result = torch.cat([result, encoded.unsqueeze(0)], dim=0)
         masks = torch.cat([masks, emask.unsqueeze(0)], dim=0)
     return result, masks
