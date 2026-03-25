@@ -7,10 +7,9 @@ from src.data.data import Peptide
 from src.network.network import Model, decode, encode
 from src.utils.config import Config
 
-def eval(config: Config, model: Model, train_dataloader: DataLoader[Peptide], eval_dataloader: DataLoader[Peptide]):
+def eval(config: Config, model: Model, train_dataloader: DataLoader[Peptide], eval_dataloader: DataLoader[Peptide], global_step):
     model.eval()
     writer = SummaryWriter(log_dir="runs/eval1")
-    global_step = 0
     total_peptides = 0
     correct_peptides = 0
     total_aas = 0
@@ -25,20 +24,30 @@ def eval(config: Config, model: Model, train_dataloader: DataLoader[Peptide], ev
             embedding = model.encode_embedding.forward(spec, prec)
 
             # init shape [batch size, max seq len]
-            seqs = torch.full((batch_sz, config.seq.max_seq_len), config.PAD_TOKEN)
+            seqs = torch.full((batch_sz, config.hyper.max_length), config.PAD_TOKEN)
             seqs[:, 0] = config.SOS_TOKEN
 
-            finished_indices = torch.zeros(batch_sz)
+            incomplete = torch.full((batch_sz,), True, dtype=torch.bool)  # true for not done, false for done
 
-            for i in range(config.seq.max_seq_len):
-                pass
-                # FLEKSJLJKSLAJfsajjojqf
-                # repeat thing and feed back into itself?
+            for i in range(config.hyper.max_length):
+                
+                masks = torch.tensor([True] * (i+1) + [False] * (config.hyper.max_length - (i+1)))
+                masks = masks.unsqueeze(0).repeat(batch_sz, 1)
 
-            
-            # i am so confused oh my goodness gracious
+                peptide_seq = model.encode_sequence.forward((seqs[incomplete, :].to(model.config.device), masks.to(model.config.device)))
+                logits = model.decode_sequence.forward((peptide_seq, masks.to(model.config.device)), embedding)
+
+                seqs[incomplete, (i+1)] = softmax()
+
+                # put the highest value logit into the next seqs
+                # check if any seqs are complete
     
-    p_correct_seqs = correct_peptides/total_peptides
-    p_correct_aas = correct_aas/total_aas
+    p_correct_seqs = (correct_peptides/total_peptides) * 100
+    p_correct_aas = (correct_aas/total_aas) * 100
+
+    writer.add_scalar("Correct Sequences (%)", p_correct_seqs, global_step)
+    writer.add_scalar("Correct AAs (%)", p_correct_aas, global_step)
+
+    model.train()
 
     return p_correct_seqs, p_correct_aas
