@@ -38,6 +38,7 @@ def encode(sequence: list[str], config: Config):
         encoded = torch.tensor([config.SOS_TOKEN] + [ENCODE_MAP[aa] for aa in seq] + [config.EOS_TOKEN])
         if (len(encoded) > config.hyper.max_length):
             encoded = encoded[:config.hyper.max_length]
+            encoded[-1] = config.EOS_TOKEN
         elif (len(encoded) < config.hyper.max_length):
             encoded = nn.functional.pad(encoded, (0, config.hyper.max_length - len(encoded)), value=config.PAD_TOKEN)
         emask = torch.tensor([True] * len(encoded) + [False] * (config.hyper.max_length - len(encoded)))
