@@ -52,10 +52,13 @@ class SequenceEncoder(nn.Module):
         )
 
     def forward(self, data: tuple[torch.Tensor, torch.Tensor]):
+        smask = torch.triu(torch.ones(self.config.hyper.max_length, self.config.hyper.max_length), diagonal=1)
+        smask = smask.masked_fill(smask == 1, float('-inf'))
+        smask = smask.to("cuda")
         sequence, mask = data
         sequence = self.ff1.forward(sequence.unsqueeze(2))
         sequence = self.positional_encoding.forward(sequence)
-        x = self.encoder.forward(sequence, src_key_padding_mask=mask)
+        x = self.encoder.forward(sequence, mask=smask, src_key_padding_mask=mask, is_causal=True)
         x = self.ff2.forward(x)
         return x
 

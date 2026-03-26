@@ -12,7 +12,7 @@ from src.utils.config import Config
 
 def run(config: Config, model: Model, loss_fn, optimizer, scheduler, train_dataloader: DataLoader[Peptide], eval_dataloader: DataLoader[Peptide]):
     # for epoch in range(config.hyper.epochs):
-    writer = SummaryWriter(log_dir="runs/run1")
+    writer = SummaryWriter(log_dir="runs/run2")
     global_step = 0
     moving_avg = None
     weight = 0.1
