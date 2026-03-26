@@ -28,4 +28,5 @@ if __name__ == "__main__":
     train_dataloader = DataLoader(dataset, batch_size=config.hyper.batch_size, shuffle=True, collate_fn=collate_fn)
     eval_dataloader = DataLoader(EvalDataset(config), batch_size=config.hyper.batch_size, shuffle=False, collate_fn=collate_fn)
     run(config, model.to("cuda"), loss_fn, optimizer, None, train_dataloader, eval_dataloader)
+    # run(config, loss_fn, EvalDataset(config))
 
