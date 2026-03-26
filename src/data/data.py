@@ -17,7 +17,7 @@ class Peptide:
 class PeptideDataset(Dataset):
 
     def __init__(self, file_path, num_peaks):
-        super().__init__();
+        super().__init__()
         file = h5py.File(file_path, 'r')
         obj = file['charges']
         assert isinstance(obj, h5py.Dataset)
@@ -93,7 +93,6 @@ class EvalDataset(PeptideDataset):
         mz = torch.cat([data.precursor_mass, mz])
         i = torch.cat([torch.tensor(1.1).unsqueeze(0), i])
         return Peptide(data.precursor_charge, data.precursor_mass, (mz, i), data.sequence)
-    
 
 def collate_fn(batch: Iterable[Peptide]):
     prem = [b.precursor_mass for b in batch]
