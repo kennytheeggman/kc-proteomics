@@ -30,8 +30,9 @@ def run(config: Config, model: Model, loss_fn, optimizer, scheduler, train_datal
         if idx % 1000 == 0:
             torch.save(model.state_dict(), config.hyper.checkpoint_name)
         if idx % 10 == 0:
-            p_correct_seqs, p_correct_tokens = eval(config, model, train_dataloader, eval_dataloader, global_step, idx, batch)
-            print(f"step {global_step}: {p_correct_seqs:.1f}% correct seqs, {p_correct_tokens:.1f}% correct tokens")
+            p_correct_seqs, p_correct_tokens, logits = eval(config, model, train_dataloader, eval_dataloader, global_step, idx, batch)
+            print(f"Step {idx}: correct seqs: {p_correct_seqs:.1f}% correct tokens: {p_correct_tokens:.1f}%")
+            print(f"Eval; step {idx} loss: {loss.item()} pred: {decode(logits, config)[0]}, target: {peptide[0]}")
         # scheduler.step()
             
         if moving_avg is None:

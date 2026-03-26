@@ -72,7 +72,7 @@ def eval(config: Config, model: Model, train_dataloader: DataLoader[Peptide], ev
 
     model.train()
 
-    return p_correct_seqs, p_correct_tokens
+    return p_correct_seqs, p_correct_tokens, logits
 
 
 def encode_seqs(sequence: list[str], config: Config):
