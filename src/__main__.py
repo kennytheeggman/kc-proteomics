@@ -27,6 +27,6 @@ if __name__ == "__main__":
     optimizer = torch.optim.Adam(model.parameters(), lr=config.hyper.learning_rate)
     train_dataloader = DataLoader(dataset, batch_size=config.hyper.batch_size, shuffle=True, collate_fn=collate_fn)
     eval_dataloader = DataLoader(EvalDataset(config), batch_size=config.hyper.batch_size, shuffle=False, collate_fn=collate_fn)
-    run(config, model.to(config.device), loss_fn, optimizer, None, train_dataloader, eval_dataloader)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config.hyper.epochs * len(train_dataloader),  eta_min=1e-6)
+    run(config, model.to(config.device), loss_fn, optimizer, scheduler, train_dataloader, eval_dataloader)
     # scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=config.hyper.max_learning_rate, steps_per_epoch=len(train_dataloader), epochs=config.hyper.epochs)

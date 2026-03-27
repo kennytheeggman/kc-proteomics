@@ -1,5 +1,3 @@
-
-
 import torch
 from torch.utils.data import DataLoader
 from torch.nn.utils import clip_grad_norm_
@@ -8,11 +6,13 @@ from torch.utils.tensorboard import SummaryWriter
 from src.data.data import Peptide
 from src.network.network import Model, decode, encode
 from src.utils.config import Config
+from src.flows.eval import eval
 
 
 def run(config: Config, model: Model, loss_fn, optimizer, scheduler, train_dataloader: DataLoader[Peptide], eval_dataloader: DataLoader[Peptide]):
+    model.train()
     # for epoch in range(config.hyper.epochs):
-    writer = SummaryWriter(log_dir="runs/run2")
+    writer = SummaryWriter(log_dir="runs/mar-27-celena")
     global_step = 0
     moving_avg = None
     weight = 0.1
@@ -27,13 +27,21 @@ def run(config: Config, model: Model, loss_fn, optimizer, scheduler, train_datal
         print(f"Step {idx} loss: {loss.item()} pred: {decode(logits, config)[0]}, target: {peptide[0]}")
         if idx % 1000 == 0:
             torch.save(model.state_dict(), config.hyper.checkpoint_name)
-        # scheduler.step()
+        if idx % 10 == 0:
+            p_correct_seqs, p_correct_tokens, logits = eval(config, model, train_dataloader, eval_dataloader, global_step, idx, batch, writer)
+            print(f"Step {idx}: correct seqs: {p_correct_seqs:.1f}% correct tokens: {p_correct_tokens:.1f}%")
+            print(f"Eval; step {idx} loss: {loss.item()} pred: {decode(logits, config)[0]}, target: {peptide[0]}")
+        scheduler.step()
+            
         if moving_avg is None:
             moving_avg = loss.item()
         else:
             moving_avg = loss.item() * weight + (1 - weight) * moving_avg
         writer.add_scalar("Loss/train", loss.item(), global_step)
-        # writer.add_scalar("Learning Rate", scheduler.get_last_lr()[0], global_step)
+        writer.add_scalar("Learning Rate", scheduler.get_last_lr()[0], global_step)
         writer.add_scalar("Moving Average Loss", moving_avg, global_step)
         global_step += 1
+    
+    writer.flush()
+    writer.close()
     # print(f"Epoch {epoch} loss: {loss.item()}")
